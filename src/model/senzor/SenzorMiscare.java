@@ -22,7 +22,7 @@ public class SenzorMiscare extends Senzor {
 
     @Override
     public String toString() {
-        return "[SENZOR FUM] --->>> id = " + getId() + " nume = " + getNume() + " valoare = " + getValoare() +
+        return "[SENZOR MISCARE] --->>> id = " + getId() + " nume = " + getNume() + " valoare = " + getValoare() +
                 " miscare detectata = " + miscareDetectata;
     }
 }

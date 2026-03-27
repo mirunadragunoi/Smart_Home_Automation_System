@@ -22,7 +22,7 @@ public class SenzorLumina extends Senzor {
 
     @Override
     public String toString() {
-        return "[SENZOR FUM] --->>> id = " + getId() + " nume = " + getNume() + " valoare = " + getValoare() +
+        return "[SENZOR LUMINA] --->>> id = " + getId() + " nume = " + getNume() + " valoare = " + getValoare() +
                 " nivel lumina = " + nivelLumina;
     }
 }

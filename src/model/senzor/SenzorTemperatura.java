@@ -22,7 +22,7 @@ public class SenzorTemperatura extends Senzor {
 
     @Override
     public String toString() {
-        return "[SENZOR FUM] --->>> id = " + getId() + " nume = " + getNume() + " valoare = " + getValoare() +
+        return "[SENZOR TEMPERATURA] --->>> id = " + getId() + " nume = " + getNume() + " valoare = " + getValoare() +
                 " temperatura = " + temperatura;
     }
 }

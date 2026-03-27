@@ -30,4 +30,10 @@ public class Termostat extends Device {
     public void setTargetTemperatura(double targetTemperatura) {
         this.targetTemperatura = targetTemperatura;
     }
+
+    @Override
+    public String toString() {
+        return "[TERMOSTAT] --->>> id = " + getId() + " nume = " + getNume() + " temperatura = " + temperatura +
+                " target temperatura = " + targetTemperatura;
+    }
 }

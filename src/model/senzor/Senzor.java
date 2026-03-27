@@ -2,6 +2,8 @@ package model.senzor;
 
 import model.Room;
 
+import java.util.Objects;
+
 public abstract class Senzor {
     private int id;
     private String nume;
@@ -15,6 +17,19 @@ public abstract class Senzor {
         this.nume = nume;
         this.valoare = valoare;
         this.room = room;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Senzor senzor = (Senzor) o;
+        return id == senzor.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
     // getteri
