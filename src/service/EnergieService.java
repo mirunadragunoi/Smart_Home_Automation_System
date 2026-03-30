@@ -1,0 +1,39 @@
+package service;
+
+import model.House;
+import model.RaportEnergie;
+import model.Room;
+import model.device.Device;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+public class EnergieService {
+    private List<RaportEnergie> rapoarte = new ArrayList<>();
+
+    public double calculateConsum(House house) {
+        double totalConsum = 0;
+        for (Room room : house.getRooms()) {
+            for (Device device : room.getDevices()) {
+                if (device.getStatus()) {
+                    totalConsum += device.getPutereConsumata();
+                }
+            }
+        }
+        System.out.println("Consum total pentru " + house.getAdresa() + ": " + totalConsum + " kWh");
+        return totalConsum;
+    }
+
+    public RaportEnergie generateRaportEnergie(int id, House house) {
+        double consum = calculateConsum(house);
+        RaportEnergie raport = new RaportEnergie(id, house, consum, LocalDateTime.now());
+        rapoarte.add(raport);
+        System.out.println("Raport energie generat: " + raport);
+        return raport;
+    }
+
+    public List<RaportEnergie> getAllRapoarte() {
+        return rapoarte;
+    }
+}
