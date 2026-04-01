@@ -11,13 +11,16 @@ import model.senzor.Senzor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class AutomationService {
-    private List<RegulaAutomatizare> reguli = new ArrayList<>();
+    /** reguli indexate dupa id; TreeMap mentine cheile sortate (cerinta colectie sortata). */
+    private final Map<Integer, RegulaAutomatizare> reguli = new TreeMap<>();
 
     public RegulaAutomatizare createRule(int id, String nume) {
         RegulaAutomatizare regula = new RegulaAutomatizare(id, nume, false);
-        reguli.add(regula);
+        reguli.put(id, regula);
         System.out.println("Regula creata: " + regula);
         return regula;
     }
@@ -43,7 +46,7 @@ public class AutomationService {
 
     public void executeRules() {
         System.out.println("\n=== Executare reguli de automatizare ===");
-        for (RegulaAutomatizare regula : reguli) {
+        for (RegulaAutomatizare regula : reguli.values()) {
             if (!regula.isActiv()) {
                 System.out.println("Regula '" + regula.getNume() + "' este inactiva, se sare.");
                 continue;
@@ -125,7 +128,8 @@ public class AutomationService {
         }
     }
 
+    /** lista regulilor in ordinea sortata dupa id (valorile TreeMap-ului) */
     public List<RegulaAutomatizare> getAllRules() {
-        return reguli;
+        return new ArrayList<>(reguli.values());
     }
 }

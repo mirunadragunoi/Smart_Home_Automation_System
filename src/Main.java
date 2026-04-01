@@ -75,6 +75,15 @@ public class Main {
         // automatizari
         System.out.println("========== MANAGEMENT AUTOMATIZARI ==========\n");
 
+        // id=2 introdus inainte de id=1 — TreeMap pastreaza ordinea dupa id la listare si la executeRules
+        RegulaAutomatizare regulaLumina = automationService.createRule(2, "Lumina automata");
+        automationService.addConditie(regulaLumina, 2, senzorLumina, "<", 200.0);
+        automationService.addActiune(regulaLumina, 3, luminaLiving, "turnOn", 0);
+        automationService.addActiune(regulaLumina, 4, luminaLiving, "setLuminozitate", 100);
+        automationService.activareRule(regulaLumina);
+
+        System.out.println();
+
         RegulaAutomatizare regulaTemp = automationService.createRule(1, "Racire automata");
         automationService.addConditie(regulaTemp, 1, senzorTemp, ">", 25.0);
         automationService.addActiune(regulaTemp, 1, termostatLiving, "turnOn", 0);
@@ -82,12 +91,7 @@ public class Main {
         automationService.activareRule(regulaTemp);
 
         System.out.println();
-
-        RegulaAutomatizare regulaLumina = automationService.createRule(2, "Lumina automata");
-        automationService.addConditie(regulaLumina, 2, senzorLumina, "<", 200.0);
-        automationService.addActiune(regulaLumina, 3, luminaLiving, "turnOn", 0);
-        automationService.addActiune(regulaLumina, 4, luminaLiving, "setLuminozitate", 100);
-        automationService.activareRule(regulaLumina);
+        System.out.println("(Colectie sortata) Reguli in ordinea id: " + automationService.getAllRules());
 
         System.out.println();
 
