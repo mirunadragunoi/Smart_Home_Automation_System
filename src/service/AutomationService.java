@@ -4,21 +4,40 @@ import model.automatizare.Actiune;
 import model.automatizare.Conditie;
 import model.automatizare.RegulaAutomatizare;
 import model.device.Device;
-import model.device.DoorLook;
+import model.device.DoorLock;
 import model.device.Lumina;
 import model.device.Termostat;
 import model.senzor.Senzor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 
 public class AutomationService {
-    /** reguli indexate dupa id; TreeMap mentine cheile sortate (cerinta colectie sortata). */
+    private static final Set<String> OPERATORS = new HashSet<>(Arrays.asList(">", "<", ">=", "<=", "=="));
+    private static final Set<String> COMMANDS = new HashSet<>(
+            Arrays.asList("turnOn", "turnOff", "setTemperature", "setLuminozitate", "lock", "unlock")
+    );
+
+    //reguli indexate dupa id; TreeMap mentine cheile sortate (cerinta colectie sortata)
     private final Map<Integer, RegulaAutomatizare> reguli = new TreeMap<>();
 
     public RegulaAutomatizare createRule(int id, String nume) {
+        if (id <= 0) {
+            throw new IllegalArgumentException("Id-ul regulii trebuie sa fie pozitiv.");
+        }
+        if (nume == null || nume.trim().isEmpty()) {
+            throw new IllegalArgumentException("Numele regulii nu poate fi gol.");
+        }
+        if (reguli.containsKey(id)) {
+            throw new IllegalArgumentException("Exista deja o regula cu id-ul " + id);
+        }
+
         RegulaAutomatizare regula = new RegulaAutomatizare(id, nume, false);
         reguli.put(id, regula);
         System.out.println("Regula creata: " + regula);
@@ -26,6 +45,15 @@ public class AutomationService {
     }
 
     public Conditie addConditie(RegulaAutomatizare regula, int id, Senzor senzor, String operator, double valoare) {
+        Objects.requireNonNull(regula, "Regula nu poate fi null.");
+        Objects.requireNonNull(senzor, "Senzorul nu poate fi null.");
+        if (!OPERATORS.contains(operator)) {
+            throw new IllegalArgumentException("Operator invalid: " + operator);
+        }
+        if (regula.getConditii().stream().anyMatch(c -> c.getId() == id)) {
+            throw new IllegalArgumentException("Conditie deja existenta cu id-ul " + id);
+        }
+
         Conditie conditie = new Conditie(id, senzor, operator, valoare);
         regula.getConditii().add(conditie);
         System.out.println("Conditie adaugata la regula '" + regula.getNume() + "': " + conditie);
@@ -33,6 +61,15 @@ public class AutomationService {
     }
 
     public Actiune addActiune(RegulaAutomatizare regula, int id, Device device, String comanda, double valoare) {
+        Objects.requireNonNull(regula, "Regula nu poate fi null.");
+        Objects.requireNonNull(device, "Device-ul nu poate fi null.");
+        if (!COMMANDS.contains(comanda)) {
+            throw new IllegalArgumentException("Comanda invalida: " + comanda);
+        }
+        if (regula.getActiuni().stream().anyMatch(a -> a.getId() == id)) {
+            throw new IllegalArgumentException("Actiune deja existenta cu id-ul " + id);
+        }
+
         Actiune actiune = new Actiune(id, device, comanda, valoare);
         regula.getActiuni().add(actiune);
         System.out.println("Actiune adaugata la regula '" + regula.getNume() + "': " + actiune);
@@ -40,8 +77,23 @@ public class AutomationService {
     }
 
     public void activareRule(RegulaAutomatizare regula) {
+        Objects.requireNonNull(regula, "Regula nu poate fi null.");
         regula.setActiv(true);
         System.out.println("Regula activata: " + regula.getNume());
+    }
+
+    public void dezactivareRule(RegulaAutomatizare regula) {
+        Objects.requireNonNull(regula, "Regula nu poate fi null.");
+        regula.setActiv(false);
+        System.out.println("Regula dezactivata: " + regula.getNume());
+    }
+
+    public void deleteRule(int id) {
+        RegulaAutomatizare removed = reguli.remove(id);
+        if (removed == null) {
+            throw new IllegalArgumentException("Nu exista regula cu id-ul " + id);
+        }
+        System.out.println("Regula stearsa: " + removed.getNume());
     }
 
     public void executeRules() {
@@ -80,9 +132,7 @@ public class AutomationService {
             case ">=": return valoareSenzor >= valoareTarget;
             case "<=": return valoareSenzor <= valoareTarget;
             case "==": return valoareSenzor == valoareTarget;
-            default:
-                System.out.println("Operator necunoscut: " + operator);
-                return false;
+            default: return false;
         }
     }
 
@@ -112,14 +162,14 @@ public class AutomationService {
                 }
                 break;
             case "lock":
-                if (device instanceof DoorLook) {
-                    ((DoorLook) device).setLocked(true);
+                if (device instanceof DoorLock) {
+                    ((DoorLock) device).setLocked(true);
                     System.out.println("  -> " + device.getNume() + " incuiat.");
                 }
                 break;
             case "unlock":
-                if (device instanceof DoorLook) {
-                    ((DoorLook) device).setLocked(false);
+                if (device instanceof DoorLock) {
+                    ((DoorLock) device).setLocked(false);
                     System.out.println("  -> " + device.getNume() + " descuiat.");
                 }
                 break;
@@ -128,7 +178,7 @@ public class AutomationService {
         }
     }
 
-    /** lista regulilor in ordinea sortata dupa id (valorile TreeMap-ului) */
+    // lista regulilor in ordinea sortata dupa id (valorile TreeMap-ului)
     public List<RegulaAutomatizare> getAllRules() {
         return new ArrayList<>(reguli.values());
     }

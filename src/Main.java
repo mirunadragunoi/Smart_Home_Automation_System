@@ -5,34 +5,38 @@ import model.automatizare.*;
 import service.*;
 
 public class Main {
+
+    private static final HouseService houseService = new HouseService();
+    private static final DeviceService deviceService = new DeviceService();
+    private static final SenzorService senzorService = new SenzorService();
+    private static final AutomationService automationService = new AutomationService();
+    private static final EnergieService energieService = new EnergieService();
+
     public static void main(String[] args) {
-        // initializare servicii
-        HouseService houseService = new HouseService();
-        DeviceService deviceService = new DeviceService();
-        SenzorService senzorService = new SenzorService();
-        AutomationService automationService = new AutomationService();
-        EnergieService energieService = new EnergieService();
-
-        // management casa
-        System.out.println("========== MANAGEMENT CASA ==========\n");
-
         User user = new User(1, "Alexandru Popescu", "alex@email.com", "parola123");
         House casa = houseService.createHouse(1, "Str. Florilor Nr. 15, Bucuresti", user);
 
         Room livingRoom = houseService.addRoom(casa, 1, "Living", "living_room");
         Room dormitor = houseService.addRoom(casa, 2, "Dormitor Master", "bedroom");
         Room bucatarie = houseService.addRoom(casa, 3, "Bucatarie", "kitchen");
+        Room birou = houseService.addRoom(casa, 4, "Birou", "office");
 
-        System.out.println("Camere in casa: " + houseService.getRooms(casa));
-        System.out.println();
+        DemoDevicesContext devices = demoDeviceManagement(livingRoom, dormitor, bucatarie, birou);
+        DemoSenzoriContext senzori = demoSenzorManagement(livingRoom, bucatarie);
+        demoAutomationManagement(devices, senzori);
+        demoHouseManagement(casa, birou);
+        demoEnergie(casa);
 
-        // management device uri
+        System.out.println("\n========== SMART HOME SYSTEM READY ==========");
+    }
+
+    private static DemoDevicesContext demoDeviceManagement(Room livingRoom, Room dormitor, Room bucatarie, Room birou) {
         System.out.println("========== MANAGEMENT DEVICES ==========\n");
 
         Lumina luminaLiving = new Lumina(1, "Lampa Living", false, 0.06, null, 80, "alb_cald");
         Termostat termostatLiving = new Termostat(2, "Termostat Living", false, 0.03, null, 21.5, 22.0);
         Camera cameraSec = new Camera(3, "Camera Intrare", false, 0.05, null, false, 1080);
-        DoorLook doorLock = new DoorLook(4, "Yala Usa Principala", false, 0.01, null, true, "1234");
+        DoorLock doorLock = new DoorLock(4, "Yala Usa Principala", false, 0.01, null, true, "1234");
         Lumina luminaDormitor = new Lumina(5, "Lampa Dormitor", false, 0.04, null, 50, "alb_rece");
 
         deviceService.addDevice(livingRoom, luminaLiving);
@@ -41,19 +45,23 @@ public class Main {
         deviceService.addDevice(livingRoom, doorLock);
         deviceService.addDevice(dormitor, luminaDormitor);
 
-        System.out.println();
         deviceService.turnOnDevice(luminaLiving);
         deviceService.turnOnDevice(termostatLiving);
         deviceService.turnOnDevice(cameraSec);
+        deviceService.turnOffDevice(cameraSec);
 
-        System.out.println();
         System.out.println("Devices in Living: " + deviceService.getDevicesByRoom(livingRoom));
-        System.out.println();
+        System.out.println("Devices in Living (sortate dupa consum): " + deviceService.getDevicesSortedByConsum(livingRoom));
 
         deviceService.moveDevice(cameraSec, livingRoom, bucatarie);
+        deviceService.removeDevice(dormitor, luminaDormitor);
+        deviceService.addDevice(birou, luminaDormitor);
         System.out.println();
 
-        // management senzori
+        return new DemoDevicesContext(luminaLiving, termostatLiving, cameraSec, doorLock);
+    }
+
+    private static DemoSenzoriContext demoSenzorManagement(Room livingRoom, Room bucatarie) {
         System.out.println("========== MANAGEMENT SENZORI ==========\n");
 
         SenzorTemperatura senzorTemp = new SenzorTemperatura(1, "Senzor Temp Living", 0, null, 21.5);
@@ -66,46 +74,81 @@ public class Main {
         senzorService.addSenzor(bucatarie, senzorFum);
         senzorService.addSenzor(livingRoom, senzorLumina);
 
-        System.out.println();
         senzorService.simulateSenzorValue(senzorTemp, 18.0, 30.0);
         senzorService.simulateSenzorValue(senzorLumina, 0, 1000);
         senzorService.readSenzor(senzorTemp);
+        System.out.println("Sincronizare temp -> valoare: " + senzorTemp.getTemperatura() + " | " + senzorTemp.getValoare());
+        System.out.println("Sincronizare lumina -> valoare: " + senzorLumina.getNivelLumina() + " | " + senzorLumina.getValoare());
         System.out.println();
 
-        // automatizari
+        return new DemoSenzoriContext(senzorTemp, senzorLumina);
+    }
+
+    private static void demoAutomationManagement(DemoDevicesContext devices, DemoSenzoriContext senzori) {
         System.out.println("========== MANAGEMENT AUTOMATIZARI ==========\n");
 
         // id=2 introdus inainte de id=1 — TreeMap pastreaza ordinea dupa id la listare si la executeRules
         RegulaAutomatizare regulaLumina = automationService.createRule(2, "Lumina automata");
-        automationService.addConditie(regulaLumina, 2, senzorLumina, "<", 200.0);
-        automationService.addActiune(regulaLumina, 3, luminaLiving, "turnOn", 0);
-        automationService.addActiune(regulaLumina, 4, luminaLiving, "setLuminozitate", 100);
+        automationService.addConditie(regulaLumina, 2, senzori.senzorLumina, "<", 200.0);
+        automationService.addActiune(regulaLumina, 3, devices.luminaLiving, "turnOn", 0);
+        automationService.addActiune(regulaLumina, 4, devices.luminaLiving, "setLuminozitate", 100);
         automationService.activareRule(regulaLumina);
 
-        System.out.println();
-
         RegulaAutomatizare regulaTemp = automationService.createRule(1, "Racire automata");
-        automationService.addConditie(regulaTemp, 1, senzorTemp, ">", 25.0);
-        automationService.addActiune(regulaTemp, 1, termostatLiving, "turnOn", 0);
-        automationService.addActiune(regulaTemp, 2, termostatLiving, "setTemperature", 22.0);
+        automationService.addConditie(regulaTemp, 1, senzori.senzorTemp, ">", 25.0);
+        automationService.addActiune(regulaTemp, 1, devices.termostatLiving, "turnOn", 0);
+        automationService.addActiune(regulaTemp, 2, devices.termostatLiving, "setTemperature", 22.0);
         automationService.activareRule(regulaTemp);
 
-        System.out.println();
+        RegulaAutomatizare regulaYala = automationService.createRule(3, "Blocare usa noaptea");
+        automationService.addActiune(regulaYala, 1, devices.doorLock, "lock", 0);
+        automationService.activareRule(regulaYala);
+        automationService.dezactivareRule(regulaYala);
+
         System.out.println("(Colectie sortata) Reguli in ordinea id: " + automationService.getAllRules());
 
-        System.out.println();
-
-        // simulam valori care triggeruiesc regulile
-        senzorTemp.setValoare(27.0);
-        senzorLumina.setValoare(150);
+        senzori.senzorTemp.setValoare(27.0);
+        senzori.senzorLumina.setValoare(150);
         automationService.executeRules();
+        automationService.deleteRule(3);
+        System.out.println();
+    }
 
-        // energie
+    private static void demoHouseManagement(House casa, Room birou) {
+        System.out.println("========== MANAGEMENT CASA ==========\n");
+        System.out.println("Camere in casa inainte de remove: " + houseService.getRooms(casa));
+        houseService.removeRoom(casa, birou);
+        System.out.println("Camere in casa dupa remove: " + houseService.getRooms(casa));
+        System.out.println();
+    }
+
+    private static void demoEnergie(House casa) {
         System.out.println("========== MANAGEMENT ENERGIE ==========\n");
-
         energieService.calculateConsum(casa);
         energieService.generateRaportEnergie(1, casa);
+    }
 
-        System.out.println("\n========== SMART HOME SYSTEM READY ==========");
+    private static class DemoDevicesContext {
+        private final Lumina luminaLiving;
+        private final Termostat termostatLiving;
+        private final Camera cameraSec;
+        private final DoorLock doorLock;
+
+        private DemoDevicesContext(Lumina luminaLiving, Termostat termostatLiving, Camera cameraSec, DoorLock doorLock) {
+            this.luminaLiving = luminaLiving;
+            this.termostatLiving = termostatLiving;
+            this.cameraSec = cameraSec;
+            this.doorLock = doorLock;
+        }
+    }
+
+    private static class DemoSenzoriContext {
+        private final SenzorTemperatura senzorTemp;
+        private final SenzorLumina senzorLumina;
+
+        private DemoSenzoriContext(SenzorTemperatura senzorTemp, SenzorLumina senzorLumina) {
+            this.senzorTemp = senzorTemp;
+            this.senzorLumina = senzorLumina;
+        }
     }
 }

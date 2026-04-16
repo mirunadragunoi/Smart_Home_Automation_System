@@ -2,13 +2,13 @@ package model.device;
 
 import model.Room;
 
-public class DoorLook extends Device{
+public class DoorLock extends Device {
     private boolean locked;
     private String codAcces;
 
-    public DoorLook() {}
+    public DoorLock() {}
 
-    public DoorLook(int id, String name, boolean status, double putereConsumata, Room room,
+    public DoorLock(int id, String name, boolean status, double putereConsumata, Room room,
                     boolean locked, String codAcces) {
         super(id, name, status, putereConsumata, room);
         this.locked = locked;
@@ -19,6 +19,7 @@ public class DoorLook extends Device{
     public boolean isLocked() {
         return locked;
     }
+
     public String getCodAcces() {
         return codAcces;
     }
@@ -27,13 +28,14 @@ public class DoorLook extends Device{
     public void setLocked(boolean locked) {
         this.locked = locked;
     }
+
     public void setCodAcces(String codAcces) {
         this.codAcces = codAcces;
     }
 
     @Override
     public String toString() {
-        return "[DOOR LOCK] --->> id = " + getId() + " nume = " + getNume() + " locked = " + locked + " cod acces = " +
-        codAcces;
+        return "[DOOR LOCK] --->> id = " + getId() + " nume = " + nume + " status = " + status +
+                " locked = " + locked + " cod acces = " + codAcces;
     }
 }

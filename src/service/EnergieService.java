@@ -7,12 +7,15 @@ import model.device.Device;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class EnergieService {
-    private List<RaportEnergie> rapoarte = new ArrayList<>();
+    private final List<RaportEnergie> rapoarte = new ArrayList<>();
 
     public double calculateConsum(House house) {
+        Objects.requireNonNull(house, "Casa nu poate fi null.");
         double totalConsum = 0;
         for (Room room : house.getRooms()) {
             for (Device device : room.getDevices()) {
@@ -26,6 +29,9 @@ public class EnergieService {
     }
 
     public RaportEnergie generateRaportEnergie(int id, House house) {
+        if (id <= 0) {
+            throw new IllegalArgumentException("Id-ul raportului trebuie sa fie pozitiv.");
+        }
         double consum = calculateConsum(house);
         RaportEnergie raport = new RaportEnergie(id, house, consum, LocalDateTime.now());
         rapoarte.add(raport);
@@ -34,6 +40,6 @@ public class EnergieService {
     }
 
     public List<RaportEnergie> getAllRapoarte() {
-        return rapoarte;
+        return Collections.unmodifiableList(rapoarte);
     }
 }

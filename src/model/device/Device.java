@@ -1,10 +1,12 @@
 package model.device;
 import model.Room;
 
-public abstract class Device {
+import java.util.Objects;
+
+public abstract class Device implements Comparable<Device> {
     private int id;
-    private String nume;
-    private boolean status;
+    protected String nume;
+    protected boolean status;
     private double putereConsumata;
     private Room room;
 
@@ -52,6 +54,27 @@ public abstract class Device {
         this.room = room;
     }
 
+    @Override
+    public int compareTo(Device other) {
+        int byConsum = Double.compare(this.putereConsumata, other.putereConsumata);
+        if (byConsum != 0) {
+            return byConsum;
+        }
+        return Integer.compare(this.id, other.id);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Device)) return false;
+        Device device = (Device) o;
+        return id == device.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 
     @Override
     public String toString() {

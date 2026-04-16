@@ -1,6 +1,7 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class House {
@@ -34,7 +35,7 @@ public class House {
     }
 
     public List<Room> getRooms() {
-        return rooms;
+        return Collections.unmodifiableList(rooms);
     }
 
     // setteri
@@ -51,7 +52,15 @@ public class House {
     }
 
     public void setRooms(List<Room> rooms) {
-        this.rooms = rooms;
+        this.rooms = new ArrayList<>(rooms);
+    }
+
+    public boolean addRoom(Room room) {
+        return this.rooms.add(room);
+    }
+
+    public boolean removeRoom(Room room) {
+        return this.rooms.remove(room);
     }
 
     @Override

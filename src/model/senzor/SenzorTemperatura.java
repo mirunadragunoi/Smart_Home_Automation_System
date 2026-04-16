@@ -10,6 +10,7 @@ public class SenzorTemperatura extends Senzor {
     public SenzorTemperatura(int id, String nume, double valoare, Room room, double temperatura) {
         super(id, nume, valoare, room);
         this.temperatura = temperatura;
+        this.valoare = temperatura;
     }
 
     public double getTemperatura() {
@@ -18,6 +19,13 @@ public class SenzorTemperatura extends Senzor {
 
     public void setTemperatura(double temperatura) {
         this.temperatura = temperatura;
+        this.valoare = temperatura;
+    }
+
+    @Override
+    public void setValoare(double valoare) {
+        super.setValoare(valoare);
+        this.temperatura = valoare;
     }
 
     @Override

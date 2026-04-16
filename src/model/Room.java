@@ -4,6 +4,7 @@ import model.device.Device;
 import model.senzor.Senzor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -42,11 +43,11 @@ public class Room {
     }
 
     public List<Device> getDevices() {
-        return devices;
+        return Collections.unmodifiableList(devices);
     }
 
     public Set<Senzor> getSenzori() {
-        return senzori;
+        return Collections.unmodifiableSet(senzori);
     }
 
     // setteri
@@ -63,11 +64,27 @@ public class Room {
     }
 
     public void setDevices(List<Device> devices) {
-        this.devices = devices;
+        this.devices = new ArrayList<>(devices);
     }
 
     public void setSenzori(Set<Senzor> senzori) {
-        this.senzori = senzori;
+        this.senzori = new HashSet<>(senzori);
+    }
+
+    public boolean addDevice(Device device) {
+        return devices.add(device);
+    }
+
+    public boolean removeDevice(Device device) {
+        return devices.remove(device);
+    }
+
+    public boolean addSenzor(Senzor senzor) {
+        return senzori.add(senzor);
+    }
+
+    public boolean removeSenzor(Senzor senzor) {
+        return senzori.remove(senzor);
     }
 
     @Override

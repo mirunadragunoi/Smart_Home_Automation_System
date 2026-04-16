@@ -7,7 +7,7 @@ import java.util.Objects;
 public abstract class Senzor {
     private int id;
     private String nume;
-    private double valoare;
+    protected double valoare;
     private Room room;
 
     public Senzor() {}
