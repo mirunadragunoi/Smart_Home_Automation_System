@@ -1,5 +1,8 @@
 package service;
 
+import exception.DuplicateEntityException;
+import exception.NotFoundException;
+import exception.ValidationException;
 import model.automatizare.Actiune;
 import model.automatizare.Conditie;
 import model.automatizare.RegulaAutomatizare;
@@ -14,7 +17,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -29,13 +31,13 @@ public class AutomationService {
 
     public RegulaAutomatizare createRule(int id, String nume) {
         if (id <= 0) {
-            throw new IllegalArgumentException("Id-ul regulii trebuie sa fie pozitiv.");
+            throw new ValidationException("Id-ul regulii trebuie sa fie pozitiv.");
         }
         if (nume == null || nume.trim().isEmpty()) {
-            throw new IllegalArgumentException("Numele regulii nu poate fi gol.");
+            throw new ValidationException("Numele regulii nu poate fi gol.");
         }
         if (reguli.containsKey(id)) {
-            throw new IllegalArgumentException("Exista deja o regula cu id-ul " + id);
+            throw new DuplicateEntityException("Exista deja o regula cu id-ul " + id);
         }
 
         RegulaAutomatizare regula = new RegulaAutomatizare(id, nume, false);
@@ -45,13 +47,13 @@ public class AutomationService {
     }
 
     public Conditie addConditie(RegulaAutomatizare regula, int id, Senzor senzor, String operator, double valoare) {
-        Objects.requireNonNull(regula, "Regula nu poate fi null.");
-        Objects.requireNonNull(senzor, "Senzorul nu poate fi null.");
+        requireNonNull(regula, "Regula nu poate fi null.");
+        requireNonNull(senzor, "Senzorul nu poate fi null.");
         if (!OPERATORS.contains(operator)) {
-            throw new IllegalArgumentException("Operator invalid: " + operator);
+            throw new ValidationException("Operator invalid: " + operator);
         }
         if (regula.getConditii().stream().anyMatch(c -> c.getId() == id)) {
-            throw new IllegalArgumentException("Conditie deja existenta cu id-ul " + id);
+            throw new DuplicateEntityException("Conditie deja existenta cu id-ul " + id);
         }
 
         Conditie conditie = new Conditie(id, senzor, operator, valoare);
@@ -61,13 +63,13 @@ public class AutomationService {
     }
 
     public Actiune addActiune(RegulaAutomatizare regula, int id, Device device, String comanda, double valoare) {
-        Objects.requireNonNull(regula, "Regula nu poate fi null.");
-        Objects.requireNonNull(device, "Device-ul nu poate fi null.");
+        requireNonNull(regula, "Regula nu poate fi null.");
+        requireNonNull(device, "Device-ul nu poate fi null.");
         if (!COMMANDS.contains(comanda)) {
-            throw new IllegalArgumentException("Comanda invalida: " + comanda);
+            throw new ValidationException("Comanda invalida: " + comanda);
         }
         if (regula.getActiuni().stream().anyMatch(a -> a.getId() == id)) {
-            throw new IllegalArgumentException("Actiune deja existenta cu id-ul " + id);
+            throw new DuplicateEntityException("Actiune deja existenta cu id-ul " + id);
         }
 
         Actiune actiune = new Actiune(id, device, comanda, valoare);
@@ -77,13 +79,13 @@ public class AutomationService {
     }
 
     public void activareRule(RegulaAutomatizare regula) {
-        Objects.requireNonNull(regula, "Regula nu poate fi null.");
+        requireNonNull(regula, "Regula nu poate fi null.");
         regula.setActiv(true);
         System.out.println("Regula activata: " + regula.getNume());
     }
 
     public void dezactivareRule(RegulaAutomatizare regula) {
-        Objects.requireNonNull(regula, "Regula nu poate fi null.");
+        requireNonNull(regula, "Regula nu poate fi null.");
         regula.setActiv(false);
         System.out.println("Regula dezactivata: " + regula.getNume());
     }
@@ -91,7 +93,7 @@ public class AutomationService {
     public void deleteRule(int id) {
         RegulaAutomatizare removed = reguli.remove(id);
         if (removed == null) {
-            throw new IllegalArgumentException("Nu exista regula cu id-ul " + id);
+            throw new NotFoundException("Nu exista regula cu id-ul " + id);
         }
         System.out.println("Regula stearsa: " + removed.getNume());
     }
@@ -181,5 +183,11 @@ public class AutomationService {
     // lista regulilor in ordinea sortata dupa id (valorile TreeMap-ului)
     public List<RegulaAutomatizare> getAllRules() {
         return new ArrayList<>(reguli.values());
+    }
+
+    private static void requireNonNull(Object object, String message) {
+        if (object == null) {
+            throw new ValidationException(message);
+        }
     }
 }

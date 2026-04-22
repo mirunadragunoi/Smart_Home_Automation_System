@@ -1,5 +1,7 @@
 package ui;
 
+import exception.AppException;
+import exception.ValidationException;
 import model.House;
 import model.RaportEnergie;
 import model.Room;
@@ -129,8 +131,8 @@ public class SmartHomeConsoleApp {
                 }
                 default -> { }
             }
-        } catch (IllegalArgumentException ex) {
-            System.out.println("Eroare: " + ex.getMessage());
+        } catch (Exception ex) {
+            handleError("CASA", ex);
         }
     }
 
@@ -150,7 +152,7 @@ public class SmartHomeConsoleApp {
 
     private House cereCasaActiva() {
         if (casaCurenta == null) {
-            throw new IllegalArgumentException("Nu ai selectat o casa activa. Foloseste meniul Casa → selectare.");
+            throw new ValidationException("Nu ai selectat o casa activa. Foloseste meniul Casa -> selectare.");
         }
         return casaCurenta;
     }
@@ -220,8 +222,8 @@ public class SmartHomeConsoleApp {
                 }
                 default -> { }
             }
-        } catch (IllegalArgumentException ex) {
-            System.out.println("Eroare: " + ex.getMessage());
+        } catch (Exception ex) {
+            handleError("DEVICES", ex);
         }
     }
 
@@ -344,8 +346,8 @@ public class SmartHomeConsoleApp {
                 }
                 default -> { }
             }
-        } catch (IllegalArgumentException ex) {
-            System.out.println("Eroare: " + ex.getMessage());
+        } catch (Exception ex) {
+            handleError("SENZORI", ex);
         }
     }
 
@@ -466,8 +468,8 @@ public class SmartHomeConsoleApp {
                 case 8 -> System.out.println(automationService.getAllRules());
                 default -> { }
             }
-        } catch (IllegalArgumentException ex) {
-            System.out.println("Eroare: " + ex.getMessage());
+        } catch (Exception ex) {
+            handleError("AUTOMATIZARI", ex);
         }
     }
 
@@ -510,8 +512,8 @@ public class SmartHomeConsoleApp {
                 }
                 default -> { }
             }
-        } catch (IllegalArgumentException ex) {
-            System.out.println("Eroare: " + ex.getMessage());
+        } catch (Exception ex) {
+            handleError("ENERGIE", ex);
         }
     }
 
@@ -529,8 +531,8 @@ public class SmartHomeConsoleApp {
             case 2 -> {
                 try {
                     System.out.println(houseService.getRooms(cereCasaActiva()));
-                } catch (IllegalArgumentException ex) {
-                    System.out.println(ex.getMessage());
+                } catch (Exception ex) {
+                    handleError("LISTE", ex);
                 }
             }
             case 3 -> deviceService.getAllDevices().forEach(System.out::println);
@@ -538,5 +540,14 @@ public class SmartHomeConsoleApp {
             case 5 -> System.out.println(automationService.getAllRules());
             default -> { }
         }
+    }
+
+    private void handleError(String modul, Exception ex) {
+        if (ex instanceof AppException) {
+            System.out.println("[EROARE][" + modul + "] " + ex.getMessage());
+            return;
+        }
+        String msg = ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage();
+        System.out.println("[EROARE][" + modul + "] Eroare neasteptata: " + msg);
     }
 }
