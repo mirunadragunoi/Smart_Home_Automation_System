@@ -71,6 +71,7 @@ public class Room {
         this.senzori = new HashSet<>(senzori);
     }
 
+    // actiuni pe rooms
     public boolean addDevice(Device device) {
         return devices.add(device);
     }

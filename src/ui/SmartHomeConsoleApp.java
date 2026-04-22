@@ -94,45 +94,52 @@ public class SmartHomeConsoleApp {
     }
 
     private void meniuCasa() {
-        System.out.println("\n------- MANAGEMENT CASA ---------");
-        System.out.println(" 1 — Creare casa (+ utilizator)");
-        System.out.println(" 2 — Selectare casa activa");
-        System.out.println(" 3 — Adaugare camera in casa activa");
-        System.out.println(" 4 — Stergere camera din casa activa");
-        System.out.println(" 5 — Afisare camere (casa activa)");
-        System.out.println(" 0 — Inapoi");
-        int o = in.readChoice("Optiune: ", 0, 5);
-        try {
-            switch (o) {
-                case 1 -> {
-                    User u = citesteUser();
-                    int hid = in.readPositiveInt("Id casa: ");
-                    String adr = in.readNonEmptyLine("Adresa: ");
-                    casaCurenta = houseService.createHouse(hid, adr, u);
-                }
-                case 2 -> selecteazaCasa();
-                case 3 -> {
-                    House h = cereCasaActiva();
-                    int rid = in.readPositiveInt("Id camera: ");
-                    String nume = in.readNonEmptyLine("Nume camera: ");
-                    String tip = in.readNonEmptyLine("Tip: ");
-                    houseService.addRoom(h, rid, nume, tip);
-                }
-                case 4 -> {
-                    House h = cereCasaActiva();
-                    Room r = alegeCamera(h, "Selecteaza camera de sters");
-                    if (r != null) {
-                        houseService.removeRoom(h, r);
-                    }
-                }
-                case 5 -> {
-                    House h = cereCasaActiva();
-                    System.out.println("Camere: " + houseService.getRooms(h));
-                }
-                default -> { }
+        boolean inapoi = false;
+        while (!inapoi) {
+            System.out.println("\n------- MANAGEMENT CASA ---------");
+            System.out.println(" 1 — Creare casa (+ utilizator)");
+            System.out.println(" 2 — Selectare casa activa");
+            System.out.println(" 3 — Adaugare camera in casa activa");
+            System.out.println(" 4 — Stergere camera din casa activa");
+            System.out.println(" 5 — Afisare camere (casa activa)");
+            System.out.println(" 0 — Inapoi");
+            int o = in.readChoice("Optiune: ", 0, 5);
+            if (o == 0) {
+                inapoi = true;
+                continue;
             }
-        } catch (Exception ex) {
-            handleError("CASA", ex);
+            try {
+                switch (o) {
+                    case 1 -> {
+                        User u = citesteUser();
+                        int hid = in.readPositiveInt("Id casa: ");
+                        String adr = in.readNonEmptyLine("Adresa: ");
+                        casaCurenta = houseService.createHouse(hid, adr, u);
+                    }
+                    case 2 -> selecteazaCasa();
+                    case 3 -> {
+                        House h = cereCasaActiva();
+                        int rid = in.readPositiveInt("Id camera: ");
+                        String nume = in.readNonEmptyLine("Nume camera: ");
+                        String tip = in.readNonEmptyLine("Tip: ");
+                        houseService.addRoom(h, rid, nume, tip);
+                    }
+                    case 4 -> {
+                        House h = cereCasaActiva();
+                        Room r = alegeCamera(h, "Selecteaza camera de sters");
+                        if (r != null) {
+                            houseService.removeRoom(h, r);
+                        }
+                    }
+                    case 5 -> {
+                        House h = cereCasaActiva();
+                        System.out.println("Camere: " + houseService.getRooms(h));
+                    }
+                    default -> { }
+                }
+            } catch (Exception ex) {
+                handleError("CASA", ex);
+            }
         }
     }
 
@@ -172,58 +179,65 @@ public class SmartHomeConsoleApp {
     }
 
     private void meniuDispozitive() {
-        System.out.println("\n------ MANAGEMENT DISPOZITIVE -----");
-        System.out.println(" 1 — Adaugare dispozitiv (tip: Lumina / Termostat / Camera / DoorLock)");
-        System.out.println(" 2 — Stergere dispozitiv din camera");
-        System.out.println(" 3 — Pornire dispozitiv");
-        System.out.println(" 4 — Oprire dispozitiv");
-        System.out.println(" 5 — Mutare dispozitiv intre camere");
-        System.out.println(" 6 — Lista dispozitive dintr-o camera");
-        System.out.println(" 7 — Lista dispozitive sortate dupa consum (camera)");
-        System.out.println(" 0 — Inapoi");
-        int o = in.readChoice("Optiune: ", 0, 7);
-        try {
-            switch (o) {
-                case 1 -> adaugaDispozitivInteractiv();
-                case 2 -> {
-                    House h = cereCasaActiva();
-                    Room r = alegeCamera(h, "Camera");
-                    Device d = alegeDeviceDinCamera(r);
-                    if (d != null) {
-                        deviceService.removeDevice(r, d);
-                    }
-                }
-                case 3 -> {
-                    Device d = alegeDeviceGlobal("Dispozitiv de pornit");
-                    if (d != null) {
-                        deviceService.turnOnDevice(d);
-                    }
-                }
-                case 4 -> {
-                    Device d = alegeDeviceGlobal("Dispozitiv de oprit");
-                    if (d != null) {
-                        deviceService.turnOffDevice(d);
-                    }
-                }
-                case 5 -> mutaDispozitivInteractiv();
-                case 6 -> {
-                    House h = cereCasaActiva();
-                    Room r = alegeCamera(h, "Camera");
-                    if (r != null) {
-                        System.out.println(deviceService.getDevicesByRoom(r));
-                    }
-                }
-                case 7 -> {
-                    House h = cereCasaActiva();
-                    Room r = alegeCamera(h, "Camera");
-                    if (r != null) {
-                        System.out.println("Sortate dupa consum: " + deviceService.getDevicesSortedByConsum(r));
-                    }
-                }
-                default -> { }
+        boolean inapoi = false;
+        while (!inapoi) {
+            System.out.println("\n------ MANAGEMENT DISPOZITIVE -----");
+            System.out.println(" 1 — Adaugare dispozitiv (tip: Lumina / Termostat / Camera / DoorLock)");
+            System.out.println(" 2 — Stergere dispozitiv din camera");
+            System.out.println(" 3 — Pornire dispozitiv");
+            System.out.println(" 4 — Oprire dispozitiv");
+            System.out.println(" 5 — Mutare dispozitiv intre camere");
+            System.out.println(" 6 — Lista dispozitive dintr-o camera");
+            System.out.println(" 7 — Lista dispozitive sortate dupa consum (camera)");
+            System.out.println(" 0 — Inapoi");
+            int o = in.readChoice("Optiune: ", 0, 7);
+            if (o == 0) {
+                inapoi = true;
+                continue;
             }
-        } catch (Exception ex) {
-            handleError("DEVICES", ex);
+            try {
+                switch (o) {
+                    case 1 -> adaugaDispozitivInteractiv();
+                    case 2 -> {
+                        House h = cereCasaActiva();
+                        Room r = alegeCamera(h, "Camera");
+                        Device d = alegeDeviceDinCamera(r);
+                        if (d != null) {
+                            deviceService.removeDevice(r, d);
+                        }
+                    }
+                    case 3 -> {
+                        Device d = alegeDeviceGlobal("Dispozitiv de pornit");
+                        if (d != null) {
+                            deviceService.turnOnDevice(d);
+                        }
+                    }
+                    case 4 -> {
+                        Device d = alegeDeviceGlobal("Dispozitiv de oprit");
+                        if (d != null) {
+                            deviceService.turnOffDevice(d);
+                        }
+                    }
+                    case 5 -> mutaDispozitivInteractiv();
+                    case 6 -> {
+                        House h = cereCasaActiva();
+                        Room r = alegeCamera(h, "Camera");
+                        if (r != null) {
+                            System.out.println(deviceService.getDevicesByRoom(r));
+                        }
+                    }
+                    case 7 -> {
+                        House h = cereCasaActiva();
+                        Room r = alegeCamera(h, "Camera");
+                        if (r != null) {
+                            System.out.println("Sortate dupa consum: " + deviceService.getDevicesSortedByConsum(r));
+                        }
+                    }
+                    default -> { }
+                }
+            } catch (Exception ex) {
+                handleError("DEVICES", ex);
+            }
         }
     }
 
@@ -312,42 +326,49 @@ public class SmartHomeConsoleApp {
     }
 
     private void meniuSenzori() {
-        System.out.println("\n----- MANAGEMENT SENZORI -----");
-        System.out.println(" 1 — Adaugare senzor");
-        System.out.println(" 2 — Citire valoare senzor");
-        System.out.println(" 3 — Simulare valoare aleatoare (min..max)");
-        System.out.println(" 4 — Setare manuala valoare (setValoare)");
-        System.out.println(" 0 — Inapoi");
-        int o = in.readChoice("Optiune: ", 0, 4);
-        try {
-            switch (o) {
-                case 1 -> adaugaSenzorInteractiv();
-                case 2 -> {
-                    Senzor s = alegeSenzorGlobal("Senzor");
-                    if (s != null) {
-                        senzorService.readSenzor(s);
-                    }
-                }
-                case 3 -> {
-                    Senzor s = alegeSenzorGlobal("Senzor");
-                    if (s != null) {
-                        double mn = in.readDouble("Min: ");
-                        double mx = in.readDouble("Max: ");
-                        senzorService.simulateSenzorValue(s, mn, mx);
-                    }
-                }
-                case 4 -> {
-                    Senzor s = alegeSenzorGlobal("Senzor");
-                    if (s != null) {
-                        double v = in.readDouble("Noua valoare: ");
-                        s.setValoare(v);
-                        System.out.println("Valoare setata: " + s);
-                    }
-                }
-                default -> { }
+        boolean inapoi = false;
+        while (!inapoi) {
+            System.out.println("\n----- MANAGEMENT SENZORI -----");
+            System.out.println(" 1 — Adaugare senzor");
+            System.out.println(" 2 — Citire valoare senzor");
+            System.out.println(" 3 — Simulare valoare aleatoare (min..max)");
+            System.out.println(" 4 — Setare manuala valoare (setValoare)");
+            System.out.println(" 0 — Inapoi");
+            int o = in.readChoice("Optiune: ", 0, 4);
+            if (o == 0) {
+                inapoi = true;
+                continue;
             }
-        } catch (Exception ex) {
-            handleError("SENZORI", ex);
+            try {
+                switch (o) {
+                    case 1 -> adaugaSenzorInteractiv();
+                    case 2 -> {
+                        Senzor s = alegeSenzorGlobal("Senzor");
+                        if (s != null) {
+                            senzorService.readSenzor(s);
+                        }
+                    }
+                    case 3 -> {
+                        Senzor s = alegeSenzorGlobal("Senzor");
+                        if (s != null) {
+                            double mn = in.readDouble("Min: ");
+                            double mx = in.readDouble("Max: ");
+                            senzorService.simulateSenzorValue(s, mn, mx);
+                        }
+                    }
+                    case 4 -> {
+                        Senzor s = alegeSenzorGlobal("Senzor");
+                        if (s != null) {
+                            double v = in.readDouble("Noua valoare: ");
+                            senzorService.updateSenzorValue(s, v);
+                            System.out.println("Valoare setata: " + s);
+                        }
+                    }
+                    default -> { }
+                }
+            } catch (Exception ex) {
+                handleError("SENZORI", ex);
+            }
         }
     }
 
@@ -400,76 +421,83 @@ public class SmartHomeConsoleApp {
     }
 
     private void meniuAutomatizari() {
-        System.out.println("\n------ MANAGEMENT AUTOMATIZARI -----");
-        System.out.println(" 1 — Creare regula");
-        System.out.println(" 2 — Adaugare conditie la regula");
-        System.out.println(" 3 — Adaugare actiune la regula");
-        System.out.println(" 4 — Activare regula");
-        System.out.println(" 5 — Dezactivare regula");
-        System.out.println(" 6 — Executare toate regulile (active)");
-        System.out.println(" 7 — Stergere regula dupa id");
-        System.out.println(" 8 — Lista reguli (sortate dupa id)");
-        System.out.println(" 0 — Inapoi");
-        int o = in.readChoice("Optiune: ", 0, 8);
-        try {
-            switch (o) {
-                case 1 -> {
-                    int id = in.readPositiveInt("Id regula: ");
-                    String nume = in.readNonEmptyLine("Nume regula: ");
-                    automationService.createRule(id, nume);
-                }
-                case 2 -> {
-                    RegulaAutomatizare r = alegeRegula("Regula");
-                    if (r == null) {
-                        return;
-                    }
-                    int cid = in.readPositiveInt("Id conditie (unic in regula): ");
-                    Senzor s = alegeSenzorGlobal("Senzor pentru conditie");
-                    if (s == null) {
-                        return;
-                    }
-                    System.out.println("Operatori: > < >= <= ==");
-                    String op = in.readNonEmptyLine("Operator: ");
-                    double val = in.readDouble("Valoare de comparat: ");
-                    automationService.addConditie(r, cid, s, op, val);
-                }
-                case 3 -> {
-                    RegulaAutomatizare r = alegeRegula("Regula");
-                    if (r == null) {
-                        return;
-                    }
-                    int aid = in.readPositiveInt("Id actiune (unic in regula): ");
-                    Device d = alegeDeviceGlobal("Device tinta");
-                    if (d == null) {
-                        return;
-                    }
-                    System.out.println("Comenzi: turnOn, turnOff, setTemperature, setLuminozitate, lock, unlock");
-                    String cmd = in.readNonEmptyLine("Comanda: ");
-                    double val = in.readDouble("Valoare (0 daca nu se foloseste): ");
-                    automationService.addActiune(r, aid, d, cmd, val);
-                }
-                case 4 -> {
-                    RegulaAutomatizare r = alegeRegula("Regula de activat");
-                    if (r != null) {
-                        automationService.activareRule(r);
-                    }
-                }
-                case 5 -> {
-                    RegulaAutomatizare r = alegeRegula("Regula de dezactivat");
-                    if (r != null) {
-                        automationService.dezactivareRule(r);
-                    }
-                }
-                case 6 -> automationService.executeRules();
-                case 7 -> {
-                    int id = in.readPositiveInt("Id regula de sters: ");
-                    automationService.deleteRule(id);
-                }
-                case 8 -> System.out.println(automationService.getAllRules());
-                default -> { }
+        boolean inapoi = false;
+        while (!inapoi) {
+            System.out.println("\n------ MANAGEMENT AUTOMATIZARI -----");
+            System.out.println(" 1 — Creare regula");
+            System.out.println(" 2 — Adaugare conditie la regula");
+            System.out.println(" 3 — Adaugare actiune la regula");
+            System.out.println(" 4 — Activare regula");
+            System.out.println(" 5 — Dezactivare regula");
+            System.out.println(" 6 — Executare toate regulile (active)");
+            System.out.println(" 7 — Stergere regula dupa id");
+            System.out.println(" 8 — Lista reguli (sortate dupa id)");
+            System.out.println(" 0 — Inapoi");
+            int o = in.readChoice("Optiune: ", 0, 8);
+            if (o == 0) {
+                inapoi = true;
+                continue;
             }
-        } catch (Exception ex) {
-            handleError("AUTOMATIZARI", ex);
+            try {
+                switch (o) {
+                    case 1 -> {
+                        int id = in.readPositiveInt("Id regula: ");
+                        String nume = in.readNonEmptyLine("Nume regula: ");
+                        automationService.createRule(id, nume);
+                    }
+                    case 2 -> {
+                        RegulaAutomatizare r = alegeRegula("Regula");
+                        if (r == null) {
+                            continue;
+                        }
+                        int cid = in.readPositiveInt("Id conditie (unic in regula): ");
+                        Senzor s = alegeSenzorGlobal("Senzor pentru conditie");
+                        if (s == null) {
+                            continue;
+                        }
+                        System.out.println("Operatori: > < >= <= ==");
+                        String op = in.readNonEmptyLine("Operator: ");
+                        double val = in.readDouble("Valoare de comparat: ");
+                        automationService.addConditie(r, cid, s, op, val);
+                    }
+                    case 3 -> {
+                        RegulaAutomatizare r = alegeRegula("Regula");
+                        if (r == null) {
+                            continue;
+                        }
+                        int aid = in.readPositiveInt("Id actiune (unic in regula): ");
+                        Device d = alegeDeviceGlobal("Device tinta");
+                        if (d == null) {
+                            continue;
+                        }
+                        System.out.println("Comenzi: turnOn, turnOff, setTemperature, setLuminozitate, lock, unlock");
+                        String cmd = in.readNonEmptyLine("Comanda: ");
+                        double val = in.readDouble("Valoare (0 daca nu se foloseste): ");
+                        automationService.addActiune(r, aid, d, cmd, val);
+                    }
+                    case 4 -> {
+                        RegulaAutomatizare r = alegeRegula("Regula de activat");
+                        if (r != null) {
+                            automationService.activareRule(r);
+                        }
+                    }
+                    case 5 -> {
+                        RegulaAutomatizare r = alegeRegula("Regula de dezactivat");
+                        if (r != null) {
+                            automationService.dezactivareRule(r);
+                        }
+                    }
+                    case 6 -> automationService.executeRules();
+                    case 7 -> {
+                        int id = in.readPositiveInt("Id regula de sters: ");
+                        automationService.deleteRule(id);
+                    }
+                    case 8 -> System.out.println(automationService.getAllRules());
+                    default -> { }
+                }
+            } catch (Exception ex) {
+                handleError("AUTOMATIZARI", ex);
+            }
         }
     }
 
@@ -488,57 +516,71 @@ public class SmartHomeConsoleApp {
     }
 
     private void meniuEnergie() {
-        System.out.println("\n----- MANAGEMENT ENERGIE -----");
-        System.out.println(" 1 — Calcul consum total (casa activa, device-uri pornite)");
-        System.out.println(" 2 — Generare raport energie");
-        System.out.println(" 3 — Lista rapoarte generate");
-        System.out.println(" 0 — Inapoi");
-        int o = in.readChoice("Optiune: ", 0, 3);
-        try {
-            House h = cereCasaActiva();
-            switch (o) {
-                case 1 -> energieService.calculateConsum(h);
-                case 2 -> {
-                    int rid = in.readPositiveInt("Id raport: ");
-                    energieService.generateRaportEnergie(rid, h);
-                }
-                case 3 -> {
-                    List<RaportEnergie> rap = energieService.getAllRapoarte();
-                    if (rap.isEmpty()) {
-                        System.out.println("Nu exista rapoarte.");
-                    } else {
-                        rap.forEach(System.out::println);
-                    }
-                }
-                default -> { }
+        boolean inapoi = false;
+        while (!inapoi) {
+            System.out.println("\n----- MANAGEMENT ENERGIE -----");
+            System.out.println(" 1 — Calcul consum total (casa activa, device-uri pornite)");
+            System.out.println(" 2 — Generare raport energie");
+            System.out.println(" 3 — Lista rapoarte generate");
+            System.out.println(" 0 — Inapoi");
+            int o = in.readChoice("Optiune: ", 0, 3);
+            if (o == 0) {
+                inapoi = true;
+                continue;
             }
-        } catch (Exception ex) {
-            handleError("ENERGIE", ex);
+            try {
+                House h = cereCasaActiva();
+                switch (o) {
+                    case 1 -> energieService.calculateConsum(h);
+                    case 2 -> {
+                        int rid = in.readPositiveInt("Id raport: ");
+                        energieService.generateRaportEnergie(rid, h);
+                    }
+                    case 3 -> {
+                        List<RaportEnergie> rap = energieService.getAllRapoarte();
+                        if (rap.isEmpty()) {
+                            System.out.println("Nu exista rapoarte.");
+                        } else {
+                            rap.forEach(System.out::println);
+                        }
+                    }
+                    default -> { }
+                }
+            } catch (Exception ex) {
+                handleError("ENERGIE", ex);
+            }
         }
     }
 
     private void meniuListe() {
-        System.out.println("\n----- LISTE RAPIDE -----");
-        System.out.println(" 1 — Toate casele");
-        System.out.println(" 2 — Camere (casa activa)");
-        System.out.println(" 3 — Toate dispozitivele");
-        System.out.println(" 4 — Toti senzorii");
-        System.out.println(" 5 — Toate regulile");
-        System.out.println(" 0 — Inapoi");
-        int o = in.readChoice("Optiune: ", 0, 5);
-        switch (o) {
-            case 1 -> houseService.getAllHouses().forEach(System.out::println);
-            case 2 -> {
-                try {
-                    System.out.println(houseService.getRooms(cereCasaActiva()));
-                } catch (Exception ex) {
-                    handleError("LISTE", ex);
-                }
+        boolean inapoi = false;
+        while (!inapoi) {
+            System.out.println("\n----- LISTE RAPIDE -----");
+            System.out.println(" 1 — Toate casele");
+            System.out.println(" 2 — Camere (casa activa)");
+            System.out.println(" 3 — Toate dispozitivele");
+            System.out.println(" 4 — Toti senzorii");
+            System.out.println(" 5 — Toate regulile");
+            System.out.println(" 0 — Inapoi");
+            int o = in.readChoice("Optiune: ", 0, 5);
+            if (o == 0) {
+                inapoi = true;
+                continue;
             }
-            case 3 -> deviceService.getAllDevices().forEach(System.out::println);
-            case 4 -> senzorService.getAllSenzori().forEach(System.out::println);
-            case 5 -> System.out.println(automationService.getAllRules());
-            default -> { }
+            switch (o) {
+                case 1 -> houseService.getAllHouses().forEach(System.out::println);
+                case 2 -> {
+                    try {
+                        System.out.println(houseService.getRooms(cereCasaActiva()));
+                    } catch (Exception ex) {
+                        handleError("LISTE", ex);
+                    }
+                }
+                case 3 -> deviceService.getAllDevices().forEach(System.out::println);
+                case 4 -> senzorService.getAllSenzori().forEach(System.out::println);
+                case 5 -> System.out.println(automationService.getAllRules());
+                default -> { }
+            }
         }
     }
 

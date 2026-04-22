@@ -4,7 +4,11 @@ import exception.DuplicateEntityException;
 import exception.NotFoundException;
 import exception.ValidationException;
 import model.Room;
+import model.device.Camera;
 import model.device.Device;
+import model.device.DoorLock;
+import model.device.Lumina;
+import model.device.Termostat;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,6 +23,7 @@ public class DeviceService {
         if (allDevices.stream().anyMatch(existing -> existing.getId() == device.getId())) {
             throw new DuplicateEntityException("Exista deja un device cu id-ul " + device.getId());
         }
+        validateDeviceBusinessRules(device);
 
         device.setRoom(room);
         room.addDevice(device);
@@ -89,6 +94,48 @@ public class DeviceService {
     private static void requireNonNull(Object object, String message) {
         if (object == null) {
             throw new ValidationException(message);
+        }
+    }
+
+    private static void validateDeviceBusinessRules(Device device) {
+        if (device.getNume() == null || device.getNume().trim().isEmpty()) {
+            throw new ValidationException("Numele device-ului nu poate fi gol.");
+        }
+        if (device.getPutereConsumata() <= 0) {
+            throw new ValidationException("Puterea consumata trebuie sa fie > 0.");
+        }
+
+        if (device instanceof Lumina lumina) {
+            if (lumina.getLuminozitate() < 0 || lumina.getLuminozitate() > 100) {
+                throw new ValidationException("Luminozitatea trebuie sa fie intre 0 si 100.");
+            }
+            if (lumina.getColor() == null || lumina.getColor().trim().isEmpty()) {
+                throw new ValidationException("Culoarea luminii nu poate fi goala.");
+            }
+            return;
+        }
+
+        if (device instanceof Termostat termostat) {
+            if (termostat.getTemperatura() < -20 || termostat.getTemperatura() > 50) {
+                throw new ValidationException("Temperatura curenta a termostatului trebuie sa fie in intervalul [-20, 50].");
+            }
+            if (termostat.getTargetTemperatura() < 10 || termostat.getTargetTemperatura() > 35) {
+                throw new ValidationException("Temperatura tinta trebuie sa fie in intervalul [10, 35].");
+            }
+            return;
+        }
+
+        if (device instanceof Camera camera) {
+            if (camera.getRezolutie() < 240) {
+                throw new ValidationException("Rezolutia camerei trebuie sa fie de minim 240.");
+            }
+            return;
+        }
+
+        if (device instanceof DoorLock doorLock) {
+            if (doorLock.getCodAcces() == null || doorLock.getCodAcces().trim().length() < 4) {
+                throw new ValidationException("Codul de acces trebuie sa aiba minim 4 caractere.");
+            }
         }
     }
 }

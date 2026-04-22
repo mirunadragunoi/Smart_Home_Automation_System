@@ -55,6 +55,7 @@ public class House {
         this.rooms = new ArrayList<>(rooms);
     }
 
+    // actiuni pe house
     public boolean addRoom(Room room) {
         return this.rooms.add(room);
     }

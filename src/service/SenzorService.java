@@ -3,6 +3,10 @@ package service;
 import exception.DuplicateEntityException;
 import exception.ValidationException;
 import model.Room;
+import model.senzor.SenzorFum;
+import model.senzor.SenzorLumina;
+import model.senzor.SenzorMiscare;
+import model.senzor.SenzorTemperatura;
 import model.senzor.Senzor;
 
 import java.util.ArrayList;
@@ -20,6 +24,7 @@ public class SenzorService {
         if (allSenzori.stream().anyMatch(existing -> existing.getId() == senzor.getId())) {
             throw new DuplicateEntityException("Exista deja un senzor cu id-ul " + senzor.getId());
         }
+        validateSenzorBusinessRules(senzor);
 
         senzor.setRoom(room);
         room.addSenzor(senzor);
@@ -33,15 +38,23 @@ public class SenzorService {
         return senzor.getValoare();
     }
 
+    public void updateSenzorValue(Senzor senzor, double valoare) {
+        requireNonNull(senzor, "Senzorul nu poate fi null.");
+        validateValueForSenzorType(senzor, valoare);
+        senzor.setValoare(valoare);
+        System.out.println("Valoare actualizata pentru " + senzor.getNume() + ": " + valoare);
+    }
+
     public void simulateSenzorValue(Senzor senzor, double minVal, double maxVal) {
         requireNonNull(senzor, "Senzorul nu poate fi null.");
         if (minVal > maxVal) {
             throw new ValidationException("Interval invalid pentru simulare: min > max.");
         }
+        validateSimulationRange(senzor, minVal, maxVal);
 
         double simulatedValue = minVal + (maxVal - minVal) * random.nextDouble();
         simulatedValue = Math.round(simulatedValue * 100.0) / 100.0;
-        senzor.setValoare(simulatedValue);
+        updateSenzorValue(senzor, simulatedValue);
         System.out.println("Simulare senzor " + senzor.getNume() + ": noua valoare = " + simulatedValue);
     }
 
@@ -52,6 +65,38 @@ public class SenzorService {
     private static void requireNonNull(Object object, String message) {
         if (object == null) {
             throw new ValidationException(message);
+        }
+    }
+
+    private static void validateSenzorBusinessRules(Senzor senzor) {
+        if (senzor.getNume() == null || senzor.getNume().trim().isEmpty()) {
+            throw new ValidationException("Numele senzorului nu poate fi gol.");
+        }
+        validateValueForSenzorType(senzor, senzor.getValoare());
+    }
+
+    private static void validateValueForSenzorType(Senzor senzor, double valoare) {
+        if (senzor instanceof SenzorTemperatura && (valoare < -50 || valoare > 80)) {
+            throw new ValidationException("Valoarea senzorului de temperatura trebuie sa fie in intervalul [-50, 80].");
+        }
+        if (senzor instanceof SenzorLumina && (valoare < 0 || valoare > 100000)) {
+            throw new ValidationException("Nivelul de lumina trebuie sa fie in intervalul [0, 100000].");
+        }
+        if ((senzor instanceof SenzorMiscare || senzor instanceof SenzorFum) &&
+                (valoare < 0 || valoare > 1)) {
+            throw new ValidationException("Pentru senzorii booleani, valoarea trebuie sa fie intre 0 si 1.");
+        }
+    }
+
+    private static void validateSimulationRange(Senzor senzor, double minVal, double maxVal) {
+        if (senzor instanceof SenzorTemperatura && (minVal < -50 || maxVal > 80)) {
+            throw new ValidationException("Simularea temperaturii trebuie sa ramana in intervalul [-50, 80].");
+        }
+        if (senzor instanceof SenzorLumina && (minVal < 0 || maxVal > 100000)) {
+            throw new ValidationException("Simularea luminii trebuie sa ramana in intervalul [0, 100000].");
+        }
+        if ((senzor instanceof SenzorMiscare || senzor instanceof SenzorFum) && (minVal < 0 || maxVal > 1)) {
+            throw new ValidationException("Simularea pentru senzorii booleani trebuie sa fie in intervalul [0, 1].");
         }
     }
 }

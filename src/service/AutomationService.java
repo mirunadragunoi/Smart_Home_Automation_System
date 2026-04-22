@@ -26,7 +26,7 @@ public class AutomationService {
             Arrays.asList("turnOn", "turnOff", "setTemperature", "setLuminozitate", "lock", "unlock")
     );
 
-    //reguli indexate dupa id; TreeMap mentine cheile sortate (cerinta colectie sortata)
+    //reguli indexate dupa id -->> TreeMap mentine cheile sortate (cerinta colectie sortata)
     private final Map<Integer, RegulaAutomatizare> reguli = new TreeMap<>();
 
     public RegulaAutomatizare createRule(int id, String nume) {
@@ -68,6 +68,8 @@ public class AutomationService {
         if (!COMMANDS.contains(comanda)) {
             throw new ValidationException("Comanda invalida: " + comanda);
         }
+        validateCommandForDevice(device, comanda);
+        validateActionValue(comanda, valoare);
         if (regula.getActiuni().stream().anyMatch(a -> a.getId() == id)) {
             throw new DuplicateEntityException("Actiune deja existenta cu id-ul " + id);
         }
@@ -99,7 +101,7 @@ public class AutomationService {
     }
 
     public void executeRules() {
-        System.out.println("\n=== Executare reguli de automatizare ===");
+        System.out.println("\n ----- Executare reguli de automatizare -----");
         for (RegulaAutomatizare regula : reguli.values()) {
             if (!regula.isActiv()) {
                 System.out.println("Regula '" + regula.getNume() + "' este inactiva, se sare.");
@@ -145,38 +147,38 @@ public class AutomationService {
         switch (comanda) {
             case "turnOn":
                 device.setStatus(true);
-                System.out.println("  -> " + device.getNume() + " pornit.");
+                System.out.println("  ---->>>> " + device.getNume() + " pornit.");
                 break;
             case "turnOff":
                 device.setStatus(false);
-                System.out.println("  -> " + device.getNume() + " oprit.");
+                System.out.println("  ---->>>> " + device.getNume() + " oprit.");
                 break;
             case "setTemperature":
                 if (device instanceof Termostat) {
                     ((Termostat) device).setTargetTemperatura(actiune.getValoare());
-                    System.out.println("  -> " + device.getNume() + " temperatura setata la " + actiune.getValoare() + "°C.");
+                    System.out.println("  ---->>>> " + device.getNume() + " temperatura setata la " + actiune.getValoare() + "°C.");
                 }
                 break;
             case "setLuminozitate":
                 if (device instanceof Lumina) {
                     ((Lumina) device).setLuminozitate((int) actiune.getValoare());
-                    System.out.println("  -> " + device.getNume() + " luminozitate setata la " + (int) actiune.getValoare() + "%.");
+                    System.out.println("  ---->>>> " + device.getNume() + " luminozitate setata la " + (int) actiune.getValoare() + "%.");
                 }
                 break;
             case "lock":
                 if (device instanceof DoorLock) {
                     ((DoorLock) device).setLocked(true);
-                    System.out.println("  -> " + device.getNume() + " incuiat.");
+                    System.out.println("  ---->>>> " + device.getNume() + " incuiat.");
                 }
                 break;
             case "unlock":
                 if (device instanceof DoorLock) {
                     ((DoorLock) device).setLocked(false);
-                    System.out.println("  -> " + device.getNume() + " descuiat.");
+                    System.out.println("  ---->>>> " + device.getNume() + " descuiat.");
                 }
                 break;
             default:
-                System.out.println("  -> Comanda necunoscuta: " + comanda);
+                System.out.println("  ---->>>> Comanda necunoscuta: " + comanda);
         }
     }
 
@@ -188,6 +190,54 @@ public class AutomationService {
     private static void requireNonNull(Object object, String message) {
         if (object == null) {
             throw new ValidationException(message);
+        }
+    }
+
+    private static void validateCommandForDevice(Device device, String comanda) {
+        switch (comanda) {
+            case "turnOn":
+            case "turnOff":
+                return;
+            case "setTemperature":
+                if (!(device instanceof Termostat)) {
+                    throw new ValidationException("Comanda setTemperature este permisa doar pentru Termostat.");
+                }
+                return;
+            case "setLuminozitate":
+                if (!(device instanceof Lumina)) {
+                    throw new ValidationException("Comanda setLuminozitate este permisa doar pentru Lumina.");
+                }
+                return;
+            case "lock":
+            case "unlock":
+                if (!(device instanceof DoorLock)) {
+                    throw new ValidationException("Comenzile lock/unlock sunt permise doar pentru DoorLock.");
+                }
+                return;
+            default:
+                throw new ValidationException("Comanda invalida: " + comanda);
+        }
+    }
+
+    private static void validateActionValue(String comanda, double valoare) {
+        switch (comanda) {
+            case "setTemperature":
+                if (valoare < 10 || valoare > 35) {
+                    throw new ValidationException("Valoarea pentru setTemperature trebuie sa fie in intervalul [10, 35].");
+                }
+                return;
+            case "setLuminozitate":
+                if (valoare < 0 || valoare > 100) {
+                    throw new ValidationException("Valoarea pentru setLuminozitate trebuie sa fie in intervalul [0, 100].");
+                }
+                return;
+            case "turnOn":
+            case "turnOff":
+            case "lock":
+            case "unlock":
+                return;
+            default:
+                throw new ValidationException("Comanda invalida: " + comanda);
         }
     }
 }
