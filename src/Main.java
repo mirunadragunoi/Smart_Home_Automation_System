@@ -11,11 +11,11 @@ public class Main {
     public static void main(String[] args) {
         ConsoleReader in = new ConsoleReader();
         System.out.println("\n-------------------------------------------------------");
-        System.out.println("              SMART HOME — punct de intrare               ");
+        System.out.println("              SMART HOME - punct de intrare               ");
         System.out.println("-------------------------------------------------------");
-        System.out.println(" 1 — Rulare demo automata");
-        System.out.println(" 2 — Mod interactiv cu meniu");
-        System.out.println(" 0 — Iesire");
+        System.out.println(" 1 - Rulare demo automata");
+        System.out.println(" 2 - Mod interactiv cu meniu");
+        System.out.println(" 0 - Iesire");
 
         boolean continua = true;
         while (continua) {

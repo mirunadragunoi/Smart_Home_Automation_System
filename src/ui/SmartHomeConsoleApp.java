@@ -48,7 +48,7 @@ public class SmartHomeConsoleApp {
 
     public void run() {
         System.out.println("\n-------------------------------------------------------");
-        System.out.println("     SMART HOME — mod interactiv (citire din terminal)   ");
+        System.out.println("     SMART HOME - mod interactiv (citire din terminal)   ");
         System.out.println("--------------------------------------------------------\n");
 
         boolean ruleaza = true;
@@ -73,14 +73,14 @@ public class SmartHomeConsoleApp {
 
     private void afiseazaMeniuPrincipal() {
         System.out.println("\n--- MENIU PRINCIPAL ---");
-        System.out.println("Casa activa: " + (casaCurenta == null ? "(niciuna — creeaza / selecteaza din 1)" : casaCurenta));
-        System.out.println(" 1 — Management casa (utilizator, casa, camere)");
-        System.out.println(" 2 — Management dispozitive");
-        System.out.println(" 3 — Management senzori");
-        System.out.println(" 4 — Management automatizari (reguli)");
-        System.out.println(" 5 — Management energie (consum, rapoarte)");
-        System.out.println(" 6 — Liste rapide (case, camere, device-uri, senzori, reguli)");
-        System.out.println(" 0 — Iesire");
+        System.out.println("Casa activa: " + (casaCurenta == null ? "(niciuna - creeaza / selecteaza din 1)" : casaCurenta));
+        System.out.println(" 1 - Management casa (utilizator, casa, camere)");
+        System.out.println(" 2 - Management dispozitive");
+        System.out.println(" 3 - Management senzori");
+        System.out.println(" 4 - Management automatizari (reguli)");
+        System.out.println(" 5 - Management energie (consum, rapoarte)");
+        System.out.println(" 6 - Liste rapide (case, camere, device-uri, senzori, reguli)");
+        System.out.println(" 0 - Iesire");
     }
 
     // citiri dedicate
@@ -97,12 +97,12 @@ public class SmartHomeConsoleApp {
         boolean inapoi = false;
         while (!inapoi) {
             System.out.println("\n------- MANAGEMENT CASA ---------");
-            System.out.println(" 1 — Creare casa (+ utilizator)");
-            System.out.println(" 2 — Selectare casa activa");
-            System.out.println(" 3 — Adaugare camera in casa activa");
-            System.out.println(" 4 — Stergere camera din casa activa");
-            System.out.println(" 5 — Afisare camere (casa activa)");
-            System.out.println(" 0 — Inapoi");
+            System.out.println(" 1 - Creare casa (+ utilizator)");
+            System.out.println(" 2 - Selectare casa activa");
+            System.out.println(" 3 - Adaugare camera in casa activa");
+            System.out.println(" 4 - Stergere camera din casa activa");
+            System.out.println(" 5 - Afisare camere (casa activa)");
+            System.out.println(" 0 - Inapoi");
             int o = in.readChoice("Optiune: ", 0, 5);
             if (o == 0) {
                 inapoi = true;
@@ -182,14 +182,14 @@ public class SmartHomeConsoleApp {
         boolean inapoi = false;
         while (!inapoi) {
             System.out.println("\n------ MANAGEMENT DISPOZITIVE -----");
-            System.out.println(" 1 — Adaugare dispozitiv (tip: Lumina / Termostat / Camera / DoorLock)");
-            System.out.println(" 2 — Stergere dispozitiv din camera");
-            System.out.println(" 3 — Pornire dispozitiv");
-            System.out.println(" 4 — Oprire dispozitiv");
-            System.out.println(" 5 — Mutare dispozitiv intre camere");
-            System.out.println(" 6 — Lista dispozitive dintr-o camera");
-            System.out.println(" 7 — Lista dispozitive sortate dupa consum (camera)");
-            System.out.println(" 0 — Inapoi");
+            System.out.println(" 1 - Adaugare dispozitiv (tip: Lumina / Termostat / Camera / DoorLock)");
+            System.out.println(" 2 - Stergere dispozitiv din camera");
+            System.out.println(" 3 - Pornire dispozitiv");
+            System.out.println(" 4 - Oprire dispozitiv");
+            System.out.println(" 5 - Mutare dispozitiv intre camere");
+            System.out.println(" 6 - Lista dispozitive dintr-o camera");
+            System.out.println(" 7 - Lista dispozitive sortate dupa consum (camera)");
+            System.out.println(" 0 - Inapoi");
             int o = in.readChoice("Optiune: ", 0, 7);
             if (o == 0) {
                 inapoi = true;
@@ -329,11 +329,11 @@ public class SmartHomeConsoleApp {
         boolean inapoi = false;
         while (!inapoi) {
             System.out.println("\n----- MANAGEMENT SENZORI -----");
-            System.out.println(" 1 — Adaugare senzor");
-            System.out.println(" 2 — Citire valoare senzor");
-            System.out.println(" 3 — Simulare valoare aleatoare (min..max)");
-            System.out.println(" 4 — Setare manuala valoare (setValoare)");
-            System.out.println(" 0 — Inapoi");
+            System.out.println(" 1 - Adaugare senzor");
+            System.out.println(" 2 - Citire valoare senzor");
+            System.out.println(" 3 - Simulare valoare aleatoare (min..max)");
+            System.out.println(" 4 - Setare manuala valoare (setValoare)");
+            System.out.println(" 0 - Inapoi");
             int o = in.readChoice("Optiune: ", 0, 4);
             if (o == 0) {
                 inapoi = true;
@@ -424,15 +424,15 @@ public class SmartHomeConsoleApp {
         boolean inapoi = false;
         while (!inapoi) {
             System.out.println("\n------ MANAGEMENT AUTOMATIZARI -----");
-            System.out.println(" 1 — Creare regula");
-            System.out.println(" 2 — Adaugare conditie la regula");
-            System.out.println(" 3 — Adaugare actiune la regula");
-            System.out.println(" 4 — Activare regula");
-            System.out.println(" 5 — Dezactivare regula");
-            System.out.println(" 6 — Executare toate regulile (active)");
-            System.out.println(" 7 — Stergere regula dupa id");
-            System.out.println(" 8 — Lista reguli (sortate dupa id)");
-            System.out.println(" 0 — Inapoi");
+            System.out.println(" 1 - Creare regula");
+            System.out.println(" 2 - Adaugare conditie la regula");
+            System.out.println(" 3 - Adaugare actiune la regula");
+            System.out.println(" 4 - Activare regula");
+            System.out.println(" 5 - Dezactivare regula");
+            System.out.println(" 6 - Executare toate regulile (active)");
+            System.out.println(" 7 - Stergere regula dupa id");
+            System.out.println(" 8 - Lista reguli (sortate dupa id)");
+            System.out.println(" 0 - Inapoi");
             int o = in.readChoice("Optiune: ", 0, 8);
             if (o == 0) {
                 inapoi = true;
@@ -519,10 +519,10 @@ public class SmartHomeConsoleApp {
         boolean inapoi = false;
         while (!inapoi) {
             System.out.println("\n----- MANAGEMENT ENERGIE -----");
-            System.out.println(" 1 — Calcul consum total (casa activa, device-uri pornite)");
-            System.out.println(" 2 — Generare raport energie");
-            System.out.println(" 3 — Lista rapoarte generate");
-            System.out.println(" 0 — Inapoi");
+            System.out.println(" 1 - Calcul consum total (casa activa, device-uri pornite)");
+            System.out.println(" 2 - Generare raport energie");
+            System.out.println(" 3 - Lista rapoarte generate");
+            System.out.println(" 0 - Inapoi");
             int o = in.readChoice("Optiune: ", 0, 3);
             if (o == 0) {
                 inapoi = true;
@@ -556,12 +556,12 @@ public class SmartHomeConsoleApp {
         boolean inapoi = false;
         while (!inapoi) {
             System.out.println("\n----- LISTE RAPIDE -----");
-            System.out.println(" 1 — Toate casele");
-            System.out.println(" 2 — Camere (casa activa)");
-            System.out.println(" 3 — Toate dispozitivele");
-            System.out.println(" 4 — Toti senzorii");
-            System.out.println(" 5 — Toate regulile");
-            System.out.println(" 0 — Inapoi");
+            System.out.println(" 1 - Toate casele");
+            System.out.println(" 2 - Camere (casa activa)");
+            System.out.println(" 3 - Toate dispozitivele");
+            System.out.println(" 4 - Toti senzorii");
+            System.out.println(" 5 - Toate regulile");
+            System.out.println(" 0 - Inapoi");
             int o = in.readChoice("Optiune: ", 0, 5);
             if (o == 0) {
                 inapoi = true;
