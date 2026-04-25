@@ -30,7 +30,7 @@ public class EnergieService {
 
     public RaportEnergie generateRaportEnergie(int id, House house) {
         if (id <= 0) {
-            throw new ValidationException("Id-ul raportului trebuie sa fie pozitiv.");
+            throw new ValidationException("Id-ul raportului trebuie sa fie pozitiv!!!");
         }
         double consum = calculateConsum(house);
         RaportEnergie raport = new RaportEnergie(id, house, consum, LocalDateTime.now());
