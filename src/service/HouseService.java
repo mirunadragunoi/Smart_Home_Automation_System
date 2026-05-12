@@ -1,11 +1,15 @@
 package service;
 
+import audit.AuditService;
 import exception.DuplicateEntityException;
 import exception.NotFoundException;
 import exception.ValidationException;
 import model.House;
 import model.Room;
 import model.User;
+import repository.HouseRepository;
+import repository.RoomRepository;
+import repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +17,10 @@ import java.util.List;
 
 public class HouseService {
     private final List<House> houses = new ArrayList<>();
+    private final UserRepository userRepository = UserRepository.getInstance();
+    private final HouseRepository houseRepository = HouseRepository.getInstance();
+    private final RoomRepository roomRepository = RoomRepository.getInstance();
+    private final AuditService audit = AuditService.getInstance();
 
     public House createHouse(int id, String adresa, User owner) {
         if (id <= 0) {
@@ -26,8 +34,13 @@ public class HouseService {
             throw new DuplicateEntityException("Exista deja o casa cu id-ul " + id);
         }
 
+        if (userRepository.findById(owner.getId()).isEmpty()) {
+            userRepository.save(owner);
+        }
         House house = new House(id, adresa, owner);
+        houseRepository.save(house);
         houses.add(house);
+        audit.log("createHouse");
         System.out.println("Casa creata: " + house);
         return house;
     }
@@ -48,7 +61,9 @@ public class HouseService {
         }
 
         Room room = new Room(id, nume, type);
+        roomRepository.saveForHouse(room, house.getId());
         house.addRoom(room);
+        audit.log("addRoom");
         System.out.println("Camera adaugata in " + house.getAdresa() + ": " + room);
         return room;
     }
@@ -59,6 +74,8 @@ public class HouseService {
         if (!house.removeRoom(room)) {
             throw new NotFoundException("Camera nu exista in casa: " + room.getNume());
         }
+        roomRepository.deleteById(room.getId());
+        audit.log("removeRoom");
         System.out.println("Camera stearsa: " + room.getNume() + " din " + house.getAdresa());
     }
 
@@ -69,6 +86,19 @@ public class HouseService {
 
     public List<House> getAllHouses() {
         return Collections.unmodifiableList(houses);
+    }
+
+    /** Incarca toate casele si camerele din DB in memoria serviciului. */
+    public void loadFromDatabase() {
+        houses.clear();
+        for (House h : houseRepository.findAll()) {
+            for (Room r : roomRepository.findByHouseId(h.getId())) {
+                h.addRoom(r);
+            }
+            houses.add(h);
+        }
+        audit.log("loadFromDatabase");
+        System.out.println("Incarcate din DB: " + houses.size() + " case.");
     }
 
     private static void requireNonNull(Object object, String message) {

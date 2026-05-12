@@ -1,13 +1,15 @@
 package service;
 
+import audit.AuditService;
 import exception.DuplicateEntityException;
 import exception.ValidationException;
 import model.Room;
+import model.senzor.Senzor;
 import model.senzor.SenzorFum;
 import model.senzor.SenzorLumina;
 import model.senzor.SenzorMiscare;
 import model.senzor.SenzorTemperatura;
-import model.senzor.Senzor;
+import repository.SenzorRepository;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,6 +19,8 @@ import java.util.Random;
 public class SenzorService {
     private final List<Senzor> allSenzori = new ArrayList<>();
     private final Random random = new Random();
+    private final SenzorRepository senzorRepository = SenzorRepository.getInstance();
+    private final AuditService audit = AuditService.getInstance();
 
     public void addSenzor(Room room, Senzor senzor) {
         requireNonNull(room, "Camera nu poate fi null.");
@@ -29,11 +33,14 @@ public class SenzorService {
         senzor.setRoom(room);
         room.addSenzor(senzor);
         allSenzori.add(senzor);
+        senzorRepository.saveForRoom(senzor, room.getId());
+        audit.log("addSenzor");
         System.out.println("Senzor adaugat in " + room.getNume() + ": " + senzor);
     }
 
     public double readSenzor(Senzor senzor) {
         requireNonNull(senzor, "Senzorul nu poate fi null.");
+        audit.log("readSenzor");
         System.out.println("Citire senzor " + senzor.getNume() + ": " + senzor.getValoare());
         return senzor.getValoare();
     }
@@ -42,6 +49,8 @@ public class SenzorService {
         requireNonNull(senzor, "Senzorul nu poate fi null.");
         validateValueForSenzorType(senzor, valoare);
         senzor.setValoare(valoare);
+        senzorRepository.update(senzor);
+        audit.log("updateSenzorValue");
         System.out.println("Valoare actualizata pentru " + senzor.getNume() + ": " + valoare);
     }
 
@@ -55,11 +64,21 @@ public class SenzorService {
         double simulatedValue = minVal + (maxVal - minVal) * random.nextDouble();
         simulatedValue = Math.round(simulatedValue * 100.0) / 100.0;
         updateSenzorValue(senzor, simulatedValue);
+        audit.log("simulateSenzorValue");
         System.out.println("Simulare senzor " + senzor.getNume() + ": noua valoare = " + simulatedValue);
     }
 
     public List<Senzor> getAllSenzori() {
         return Collections.unmodifiableList(allSenzori);
+    }
+
+    /** Incarca in memorie senzorii din DB. */
+    public void loadFromDatabase() {
+        allSenzori.clear();
+        for (Senzor s : senzorRepository.findAll()) {
+            allSenzori.add(s);
+        }
+        audit.log("loadSenzoriFromDatabase");
     }
 
     private static void requireNonNull(Object object, String message) {

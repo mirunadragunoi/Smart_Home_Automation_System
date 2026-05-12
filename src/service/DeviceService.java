@@ -1,5 +1,6 @@
 package service;
 
+import audit.AuditService;
 import exception.DuplicateEntityException;
 import exception.NotFoundException;
 import exception.ValidationException;
@@ -9,6 +10,7 @@ import model.device.Device;
 import model.device.DoorLock;
 import model.device.Lumina;
 import model.device.Termostat;
+import repository.DeviceRepository;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +18,8 @@ import java.util.List;
 
 public class DeviceService {
     private final List<Device> allDevices = new ArrayList<>();
+    private final DeviceRepository deviceRepository = DeviceRepository.getInstance();
+    private final AuditService audit = AuditService.getInstance();
 
     public void addDevice(Room room, Device device) {
         requireNonNull(room, "Camera nu poate fi null.");
@@ -28,6 +32,8 @@ public class DeviceService {
         device.setRoom(room);
         room.addDevice(device);
         allDevices.add(device);
+        deviceRepository.saveForRoom(device, room.getId());
+        audit.log("addDevice");
         System.out.println("Device adaugat in " + room.getNume() + ": " + device);
     }
 
@@ -39,18 +45,24 @@ public class DeviceService {
         }
         allDevices.removeIf(existing -> existing.getId() == device.getId());
         device.setRoom(null);
+        deviceRepository.deleteById(device.getId());
+        audit.log("removeDevice");
         System.out.println("Device sters: " + device.getNume() + " din " + room.getNume());
     }
 
     public void turnOnDevice(Device device) {
         requireNonNull(device, "Device-ul nu poate fi null.");
         device.setStatus(true);
+        deviceRepository.update(device);
+        audit.log("turnOnDevice");
         System.out.println("Device pornit: " + device.getNume());
     }
 
     public void turnOffDevice(Device device) {
         requireNonNull(device, "Device-ul nu poate fi null.");
         device.setStatus(false);
+        deviceRepository.update(device);
+        audit.log("turnOffDevice");
         System.out.println("Device oprit: " + device.getNume());
     }
 
@@ -71,6 +83,8 @@ public class DeviceService {
         fromRoom.removeDevice(device);
         toRoom.addDevice(device);
         device.setRoom(toRoom);
+        deviceRepository.updateRoom(device.getId(), toRoom.getId());
+        audit.log("moveDevice");
         System.out.println("Device " + device.getNume() + " mutat din " +
                 fromRoom.getNume() + " in " + toRoom.getNume());
     }
@@ -89,6 +103,15 @@ public class DeviceService {
 
     public List<Device> getAllDevices() {
         return Collections.unmodifiableList(allDevices);
+    }
+
+    /** Incarca in memorie toate device-urile din DB si le ataseaza camerelor primite. */
+    public void loadFromDatabase(List<Room> rooms) {
+        allDevices.clear();
+        for (Device d : deviceRepository.findAll()) {
+            allDevices.add(d);
+        }
+        audit.log("loadDevicesFromDatabase");
     }
 
     private static void requireNonNull(Object object, String message) {

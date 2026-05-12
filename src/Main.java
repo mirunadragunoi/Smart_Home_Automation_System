@@ -1,7 +1,15 @@
+import config.DatabaseConfig;
 import model.*;
 import model.device.*;
 import model.senzor.*;
 import model.automatizare.*;
+import repository.DeviceRepository;
+import repository.HouseRepository;
+import repository.RaportEnergieRepository;
+import repository.RegulaAutomatizareRepository;
+import repository.RoomRepository;
+import repository.SenzorRepository;
+import repository.UserRepository;
 import service.*;
 import ui.ConsoleReader;
 import ui.SmartHomeConsoleApp;
@@ -13,8 +21,8 @@ public class Main {
         System.out.println("\n-------------------------------------------------------");
         System.out.println("              SMART HOME - punct de intrare               ");
         System.out.println("-------------------------------------------------------");
-        System.out.println(" 1 - Rulare demo automata");
-        System.out.println(" 2 - Mod interactiv cu meniu");
+        System.out.println(" 1 - Rulare demo automata (sterge si rescrie datele in DB)");
+        System.out.println(" 2 - Mod interactiv cu meniu (incarca date din DB)");
         System.out.println(" 0 - Iesire");
 
         boolean continua = true;
@@ -22,15 +30,7 @@ public class Main {
             int mod = in.readChoice("Alege modul: ", 0, 2);
             switch (mod) {
                 case 1 -> runDemo();
-                case 2 -> {
-                    HouseService houseService = new HouseService();
-                    DeviceService deviceService = new DeviceService();
-                    SenzorService senzorService = new SenzorService();
-                    AutomationService automationService = new AutomationService();
-                    EnergieService energieService = new EnergieService();
-                    new SmartHomeConsoleApp(houseService, deviceService, senzorService,
-                            automationService, energieService).run();
-                }
+                case 2 -> runInteractive();
                 case 0 -> continua = false;
                 default -> { }
             }
@@ -40,10 +40,44 @@ public class Main {
                 }
             }
         }
+        DatabaseConfig.getInstance().closeConnection();
         System.out.println("Program incheiat.");
     }
 
+    private static void runInteractive() {
+        HouseService houseService = new HouseService();
+        DeviceService deviceService = new DeviceService();
+        SenzorService senzorService = new SenzorService();
+        AutomationService automationService = new AutomationService();
+        EnergieService energieService = new EnergieService();
+
+        // incarcare automata din DB la pornirea modului interactiv
+        houseService.loadFromDatabase();
+        senzorService.loadFromDatabase();
+        deviceService.loadFromDatabase(null);
+        automationService.loadFromDatabase();
+        energieService.loadFromDatabase();
+
+        new SmartHomeConsoleApp(houseService, deviceService, senzorService,
+                automationService, energieService).run();
+    }
+
+    /** Goleste tabelele in ordinea corecta (respecta foreign key-urile). */
+    private static void resetDatabase() {
+        RaportEnergieRepository.getInstance().deleteAll();
+        // conditii si actiuni se sterg automat prin ON DELETE CASCADE pe reguli
+        RegulaAutomatizareRepository.getInstance().deleteAll();
+        SenzorRepository.getInstance().deleteAll();
+        DeviceRepository.getInstance().deleteAll();
+        RoomRepository.getInstance().deleteAll();
+        HouseRepository.getInstance().deleteAll();
+        UserRepository.getInstance().deleteAll();
+    }
+
     private static void runDemo() {
+        // demo-ul re-creeaza datele de la zero, deci curatam DB-ul intai
+        resetDatabase();
+
         HouseService houseService = new HouseService();
         DeviceService deviceService = new DeviceService();
         SenzorService senzorService = new SenzorService();

@@ -1,5 +1,6 @@
 package service;
 
+import audit.AuditService;
 import exception.DuplicateEntityException;
 import exception.NotFoundException;
 import exception.ValidationException;
@@ -11,6 +12,7 @@ import model.device.DoorLock;
 import model.device.Lumina;
 import model.device.Termostat;
 import model.senzor.Senzor;
+import repository.RegulaAutomatizareRepository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,8 +28,10 @@ public class AutomationService {
             Arrays.asList("turnOn", "turnOff", "setTemperature", "setLuminozitate", "lock", "unlock")
     );
 
-    //reguli indexate dupa id -->> TreeMap mentine cheile sortate (cerinta colectie sortata)
+    //reguli indexate dupa id; TreeMap mentine cheile sortate (cerinta colectie sortata)
     private final Map<Integer, RegulaAutomatizare> reguli = new TreeMap<>();
+    private final RegulaAutomatizareRepository regulaRepository = RegulaAutomatizareRepository.getInstance();
+    private final AuditService audit = AuditService.getInstance();
 
     public RegulaAutomatizare createRule(int id, String nume) {
         if (id <= 0) {
@@ -42,6 +46,8 @@ public class AutomationService {
 
         RegulaAutomatizare regula = new RegulaAutomatizare(id, nume, false);
         reguli.put(id, regula);
+        regulaRepository.save(regula);
+        audit.log("createRule");
         System.out.println("Regula creata: " + regula);
         return regula;
     }
@@ -58,6 +64,8 @@ public class AutomationService {
 
         Conditie conditie = new Conditie(id, senzor, operator, valoare);
         regula.getConditii().add(conditie);
+        regulaRepository.saveConditie(conditie, regula.getId());
+        audit.log("addConditie");
         System.out.println("Conditie adaugata la regula '" + regula.getNume() + "': " + conditie);
         return conditie;
     }
@@ -76,6 +84,8 @@ public class AutomationService {
 
         Actiune actiune = new Actiune(id, device, comanda, valoare);
         regula.getActiuni().add(actiune);
+        regulaRepository.saveActiune(actiune, regula.getId());
+        audit.log("addActiune");
         System.out.println("Actiune adaugata la regula '" + regula.getNume() + "': " + actiune);
         return actiune;
     }
@@ -83,12 +93,16 @@ public class AutomationService {
     public void activareRule(RegulaAutomatizare regula) {
         requireNonNull(regula, "Regula nu poate fi null.");
         regula.setActiv(true);
+        regulaRepository.update(regula);
+        audit.log("activareRule");
         System.out.println("Regula activata: " + regula.getNume());
     }
 
     public void dezactivareRule(RegulaAutomatizare regula) {
         requireNonNull(regula, "Regula nu poate fi null.");
         regula.setActiv(false);
+        regulaRepository.update(regula);
+        audit.log("dezactivareRule");
         System.out.println("Regula dezactivata: " + regula.getNume());
     }
 
@@ -97,11 +111,14 @@ public class AutomationService {
         if (removed == null) {
             throw new NotFoundException("Nu exista regula cu id-ul " + id);
         }
+        regulaRepository.deleteById(id);
+        audit.log("deleteRule");
         System.out.println("Regula stearsa: " + removed.getNume());
     }
 
     public void executeRules() {
-        System.out.println("\n ----- Executare reguli de automatizare -----");
+        audit.log("executeRules");
+        System.out.println("\n=== Executare reguli de automatizare ===");
         for (RegulaAutomatizare regula : reguli.values()) {
             if (!regula.isActiv()) {
                 System.out.println("Regula '" + regula.getNume() + "' este inactiva, se sare.");
@@ -147,39 +164,48 @@ public class AutomationService {
         switch (comanda) {
             case "turnOn":
                 device.setStatus(true);
-                System.out.println("  ---->>>> " + device.getNume() + " pornit.");
+                System.out.println("  -> " + device.getNume() + " pornit.");
                 break;
             case "turnOff":
                 device.setStatus(false);
-                System.out.println("  ---->>>> " + device.getNume() + " oprit.");
+                System.out.println("  -> " + device.getNume() + " oprit.");
                 break;
             case "setTemperature":
                 if (device instanceof Termostat) {
                     ((Termostat) device).setTargetTemperatura(actiune.getValoare());
-                    System.out.println("  ---->>>> " + device.getNume() + " temperatura setata la " + actiune.getValoare() + "°C.");
+                    System.out.println("  -> " + device.getNume() + " temperatura setata la " + actiune.getValoare() + "°C.");
                 }
                 break;
             case "setLuminozitate":
                 if (device instanceof Lumina) {
                     ((Lumina) device).setLuminozitate((int) actiune.getValoare());
-                    System.out.println("  ---->>>> " + device.getNume() + " luminozitate setata la " + (int) actiune.getValoare() + "%.");
+                    System.out.println("  -> " + device.getNume() + " luminozitate setata la " + (int) actiune.getValoare() + "%.");
                 }
                 break;
             case "lock":
                 if (device instanceof DoorLock) {
                     ((DoorLock) device).setLocked(true);
-                    System.out.println("  ---->>>> " + device.getNume() + " incuiat.");
+                    System.out.println("  -> " + device.getNume() + " incuiat.");
                 }
                 break;
             case "unlock":
                 if (device instanceof DoorLock) {
                     ((DoorLock) device).setLocked(false);
-                    System.out.println("  ---->>>> " + device.getNume() + " descuiat.");
+                    System.out.println("  -> " + device.getNume() + " descuiat.");
                 }
                 break;
             default:
-                System.out.println("  ---->>>> Comanda necunoscuta: " + comanda);
+                System.out.println("  -> Comanda necunoscuta: " + comanda);
         }
+    }
+
+    /** Incarca regulile din DB (fara conditii/actiuni in versiunea de baza). */
+    public void loadFromDatabase() {
+        reguli.clear();
+        for (RegulaAutomatizare r : regulaRepository.findAll()) {
+            reguli.put(r.getId(), r);
+        }
+        audit.log("loadReguliFromDatabase");
     }
 
     // lista regulilor in ordinea sortata dupa id (valorile TreeMap-ului)
