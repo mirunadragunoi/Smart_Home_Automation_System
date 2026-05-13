@@ -1,1 +1,7 @@
 nume_actiune,timestamp
+loadFromDatabase,2026-05-13T21:34:10.663029
+loadSenzoriFromDatabase,2026-05-13T21:34:10.6690302
+loadDevicesFromDatabase,2026-05-13T21:34:10.6700321
+loadReguliFromDatabase,2026-05-13T21:34:10.6720284
+loadRapoarteFromDatabase,2026-05-13T21:34:10.6740294
+createHouse,2026-05-13T21:34:44.6989185

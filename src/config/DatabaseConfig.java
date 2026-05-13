@@ -33,10 +33,10 @@ public final class DatabaseConfig {
 
     private void registerDriver() {
         try {
-            Class.forName("org.postgresql.Driver");
+            Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
-            throw new AppException("Driverul PostgreSQL nu este pe classpath. "
-                    + "Verifica daca proiectul e incarcat ca Maven si dependinta org.postgresql:postgresql exista.");
+            throw new AppException("Driverul MySQL nu este pe classpath. "
+                    + "Verifica daca proiectul e incarcat ca Maven si dependinta com.mysql:mysql-connector-j exista.");
         }
     }
 
