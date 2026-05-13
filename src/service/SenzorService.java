@@ -72,11 +72,28 @@ public class SenzorService {
         return Collections.unmodifiableList(allSenzori);
     }
 
-    /** Incarca in memorie senzorii din DB. */
+    /** Incarca in memorie senzorii din DB. Daca primeste lista de camere, ii ataseaza in arbore. */
     public void loadFromDatabase() {
+        loadFromDatabase(null);
+    }
+
+    public void loadFromDatabase(List<Room> rooms) {
         allSenzori.clear();
+        java.util.Map<Integer, Room> roomById = new java.util.HashMap<>();
+        if (rooms != null) {
+            for (Room r : rooms) {
+                roomById.put(r.getId(), r);
+            }
+        }
         for (Senzor s : senzorRepository.findAll()) {
             allSenzori.add(s);
+            if (s.getRoom() != null) {
+                Room treeRoom = roomById.get(s.getRoom().getId());
+                if (treeRoom != null && !treeRoom.getSenzori().contains(s)) {
+                    treeRoom.addSenzor(s);
+                    s.setRoom(treeRoom);
+                }
+            }
         }
         audit.log("loadSenzoriFromDatabase");
     }

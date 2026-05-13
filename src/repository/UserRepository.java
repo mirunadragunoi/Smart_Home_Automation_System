@@ -6,6 +6,7 @@ import model.User;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 
 public class UserRepository extends AbstractRepository<User> {
 
@@ -60,6 +61,31 @@ public class UserRepository extends AbstractRepository<User> {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new AppException("Eroare la update user: " + e.getMessage());
+        }
+    }
+
+    public Optional<User> findByEmail(String email) {
+        String sql = "SELECT * FROM users WHERE email = ?";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new AppException("Eroare la cautare user dupa email: " + e.getMessage());
+        }
+    }
+
+    public int nextId() {
+        String sql = "SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM users";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt("next_id") : 1;
+        } catch (SQLException e) {
+            throw new AppException("Eroare la generare id user: " + e.getMessage());
         }
     }
 }

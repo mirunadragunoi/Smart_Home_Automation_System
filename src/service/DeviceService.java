@@ -108,8 +108,21 @@ public class DeviceService {
     /** Incarca in memorie toate device-urile din DB si le ataseaza camerelor primite. */
     public void loadFromDatabase(List<Room> rooms) {
         allDevices.clear();
+        java.util.Map<Integer, Room> roomById = new java.util.HashMap<>();
+        if (rooms != null) {
+            for (Room r : rooms) {
+                roomById.put(r.getId(), r);
+            }
+        }
         for (Device d : deviceRepository.findAll()) {
             allDevices.add(d);
+            if (d.getRoom() != null) {
+                Room treeRoom = roomById.get(d.getRoom().getId());
+                if (treeRoom != null && !treeRoom.getDevices().contains(d)) {
+                    treeRoom.addDevice(d);
+                    d.setRoom(treeRoom);
+                }
+            }
         }
         audit.log("loadDevicesFromDatabase");
     }

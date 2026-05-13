@@ -66,4 +66,14 @@ public class RaportEnergieRepository extends AbstractRepository<RaportEnergie> {
             throw new AppException("Eroare la update raport energie: " + e.getMessage());
         }
     }
+
+    public int nextId() {
+        String sql = "SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM rapoarte_energie";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt("next_id") : 1;
+        } catch (SQLException e) {
+            throw new AppException("Eroare la generare id raport: " + e.getMessage());
+        }
+    }
 }

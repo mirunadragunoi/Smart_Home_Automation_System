@@ -4,10 +4,15 @@ import exception.AppException;
 import model.automatizare.Actiune;
 import model.automatizare.Conditie;
 import model.automatizare.RegulaAutomatizare;
+import model.device.Device;
+import model.senzor.Senzor;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class RegulaAutomatizareRepository extends AbstractRepository<RegulaAutomatizare> {
 
@@ -76,6 +81,36 @@ public class RegulaAutomatizareRepository extends AbstractRepository<RegulaAutom
         }
     }
 
+    public int nextId() {
+        String sql = "SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM reguli_automatizare";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt("next_id") : 1;
+        } catch (SQLException e) {
+            throw new AppException("Eroare la generare id regula: " + e.getMessage());
+        }
+    }
+
+    public int nextConditieId() {
+        String sql = "SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM conditii";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt("next_id") : 1;
+        } catch (SQLException e) {
+            throw new AppException("Eroare la generare id conditie: " + e.getMessage());
+        }
+    }
+
+    public int nextActiuneId() {
+        String sql = "SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM actiuni";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt("next_id") : 1;
+        } catch (SQLException e) {
+            throw new AppException("Eroare la generare id actiune: " + e.getMessage());
+        }
+    }
+
     public void saveActiune(Actiune a, int regulaId) {
         String sql = "INSERT INTO actiuni (id, regula_id, device_id, comanda, valoare) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
@@ -87,6 +122,46 @@ public class RegulaAutomatizareRepository extends AbstractRepository<RegulaAutom
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new AppException("Eroare la salvare actiune: " + e.getMessage());
+        }
+    }
+
+    public List<Conditie> findConditiiByRegulaId(int regulaId) {
+        String sql = "SELECT id, senzor_id, operator, valoare FROM conditii WHERE regula_id = ?";
+        List<Conditie> list = new ArrayList<>();
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setInt(1, regulaId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int senzorId = rs.getInt("senzor_id");
+                    Optional<Senzor> senzor = SenzorRepository.getInstance().findById(senzorId);
+                    if (senzor.isEmpty()) continue;
+                    list.add(new Conditie(rs.getInt("id"), senzor.get(),
+                            rs.getString("operator"), rs.getDouble("valoare")));
+                }
+            }
+            return list;
+        } catch (SQLException e) {
+            throw new AppException("Eroare la incarcare conditii: " + e.getMessage());
+        }
+    }
+
+    public List<Actiune> findActiuniByRegulaId(int regulaId) {
+        String sql = "SELECT id, device_id, comanda, valoare FROM actiuni WHERE regula_id = ?";
+        List<Actiune> list = new ArrayList<>();
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setInt(1, regulaId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int deviceId = rs.getInt("device_id");
+                    Optional<Device> device = DeviceRepository.getInstance().findById(deviceId);
+                    if (device.isEmpty()) continue;
+                    list.add(new Actiune(rs.getInt("id"), device.get(),
+                            rs.getString("comanda"), rs.getDouble("valoare")));
+                }
+            }
+            return list;
+        } catch (SQLException e) {
+            throw new AppException("Eroare la incarcare actiuni: " + e.getMessage());
         }
     }
 }

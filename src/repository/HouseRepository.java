@@ -7,6 +7,8 @@ import model.User;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class HouseRepository extends AbstractRepository<House> {
@@ -61,6 +63,32 @@ public class HouseRepository extends AbstractRepository<House> {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new AppException("Eroare la update casa: " + e.getMessage());
+        }
+    }
+
+    public List<House> findByOwnerId(int ownerId) {
+        String sql = "SELECT * FROM houses WHERE owner_id = ?";
+        List<House> list = new ArrayList<>();
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setInt(1, ownerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+            return list;
+        } catch (SQLException e) {
+            throw new AppException("Eroare la cautare case dupa owner: " + e.getMessage());
+        }
+    }
+
+    public int nextId() {
+        String sql = "SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM houses";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt("next_id") : 1;
+        } catch (SQLException e) {
+            throw new AppException("Eroare la generare id casa: " + e.getMessage());
         }
     }
 }

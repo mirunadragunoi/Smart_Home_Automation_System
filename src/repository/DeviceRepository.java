@@ -11,6 +11,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DeviceRepository extends AbstractRepository<Device> {
 
@@ -129,6 +131,32 @@ public class DeviceRepository extends AbstractRepository<Device> {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new AppException("Eroare la update device: " + e.getMessage());
+        }
+    }
+
+    public List<Device> findByRoomId(int roomId) {
+        String sql = "SELECT * FROM devices WHERE room_id = ?";
+        List<Device> list = new ArrayList<>();
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setInt(1, roomId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+            return list;
+        } catch (SQLException e) {
+            throw new AppException("Eroare la cautare devices dupa room: " + e.getMessage());
+        }
+    }
+
+    public int nextId() {
+        String sql = "SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM devices";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt("next_id") : 1;
+        } catch (SQLException e) {
+            throw new AppException("Eroare la generare id device: " + e.getMessage());
         }
     }
 

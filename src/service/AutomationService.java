@@ -199,10 +199,16 @@ public class AutomationService {
         }
     }
 
-    /** Incarca regulile din DB (fara conditii/actiuni in versiunea de baza). */
+    /** Incarca regulile + conditiile + actiunile din DB. */
     public void loadFromDatabase() {
         reguli.clear();
         for (RegulaAutomatizare r : regulaRepository.findAll()) {
+            for (Conditie c : regulaRepository.findConditiiByRegulaId(r.getId())) {
+                r.getConditii().add(c);
+            }
+            for (Actiune a : regulaRepository.findActiuniByRegulaId(r.getId())) {
+                r.getActiuni().add(a);
+            }
             reguli.put(r.getId(), r);
         }
         audit.log("loadReguliFromDatabase");
