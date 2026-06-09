@@ -2,7 +2,7 @@
 
 Sistem de automatizare a unei case inteligente, dezvoltat în **Java**, ca proiect pentru disciplina **Programare Avansată pe Obiecte - Java**.
 
-Aplicația permite gestionarea dispozitivelor, senzorilor și regulilor de automatizare dintr-o locuință inteligentă, oferind funcționalități de monitorizare a consumului energetic și execuție automată a acțiunilor pe baza condițiilor din mediu.
+Aplicația permite gestionarea dispozitivelor, senzorilor și regulilor de automatizare dintr-o locuință inteligentă, oferind funcționalități de monitorizare a consumului energetic, execuție automată a acțiunilor pe baza condițiilor din mediu, persistență în bază de date MySQL și audit CSV al acțiunilor.
 
 ---
 
@@ -14,62 +14,62 @@ Aplicația permite gestionarea dispozitivelor, senzorilor și regulilor de autom
 
 ## Tipuri de obiecte (17 clase model)
 
-1. **User** -> utilizatorul care deține casa
-2. **House** -> casa inteligentă, conține camere
-3. **Room** -> cameră din casă, conține dispozitive și senzori
-4. **Device** *(abstract)* -> dispozitiv generic
-5. **Lumina** -> dispozitiv de iluminat (luminozitate, culoare)
-6. **Termostat** -> dispozitiv de control al temperaturii
-7. **Camera** -> cameră de supraveghere video
-8. **DoorLock** -> yală inteligentă
-9. **Senzor** *(abstract)* -> senzor generic
-10. **SenzorTemperatura** -> senzor de temperatură
-11. **SenzorMiscare** -> senzor de mișcare
-12. **SenzorFum** -> senzor de fum
-13. **SenzorLumina** -> senzor de lumină ambientală
-14. **RegulaAutomatizare** -> regulă de automatizare (condiții + acțiuni)
-15. **Conditie** -> condiție bazată pe un senzor
-16. **Actiune** -> acțiune executată pe un dispozitiv
-17. **RaportEnergie** -> raport de consum energetic
+1. **User** → utilizatorul care deține casa
+2. **House** → casa inteligentă, conține camere
+3. **Room** → cameră din casă, conține dispozitive și senzori
+4. **Device** *(abstract)* → dispozitiv generic
+5. **Lumina** → dispozitiv de iluminat (luminozitate, culoare)
+6. **Termostat** → dispozitiv de control al temperaturii
+7. **Camera** → cameră de supraveghere video
+8. **DoorLock** → yală inteligentă
+9. **Senzor** *(abstract)* → senzor generic
+10. **SenzorTemperatura** → senzor de temperatură
+11. **SenzorMiscare** → senzor de mișcare
+12. **SenzorFum** → senzor de fum
+13. **SenzorLumina** → senzor de lumină ambientală
+14. **RegulaAutomatizare** → regulă de automatizare (condiții + acțiuni)
+15. **Conditie** → condiție bazată pe un senzor
+16. **Actiune** → acțiune executată pe un dispozitiv
+17. **RaportEnergie** → raport de consum energetic
 
 ---
 
-## Acțiuni / Interogări (24 operații)
+## Acțiuni / Interogări (25 operații)
 
 ### HouseService
-1. `createHouse(id, adresa, owner)` -> creare casă nouă asociată unui utilizator
-2. `addRoom(house, id, nume, type)` -> adăugare cameră în casă
-3. `removeRoom(house, room)` -> ștergere cameră din casă
-4. `getRooms(house)` -> listare camere dintr-o casă
-5. `getAllHouses()` -> listare toate casele
+1. `createHouse(id, adresa, owner)` → creare casă nouă asociată unui utilizator
+2. `addRoom(house, id, nume, type)` → adăugare cameră în casă
+3. `removeRoom(house, room)` → ștergere cameră din casă
+4. `getRooms(house)` → listare camere dintr-o casă
+5. `getAllHouses()` → listare toate casele
 
 ### DeviceService
-6. `addDevice(room, device)` -> adăugare dispozitiv într-o cameră
-7. `removeDevice(room, device)` -> ștergere dispozitiv din cameră
-8. `turnOnDevice(device)` -> pornire dispozitiv
-9. `turnOffDevice(device)` -> oprire dispozitiv
-10. `moveDevice(device, fromRoom, toRoom)` -> mutare dispozitiv între camere
-11. `getDevicesByRoom(room)` -> listare dispozitive per cameră
-12. `getDevicesSortedByConsum(room)` -> listare dispozitive sortate după consum energetic
+6. `addDevice(room, device)` → adăugare dispozitiv într-o cameră
+7. `removeDevice(room, device)` → ștergere dispozitiv din cameră
+8. `turnOnDevice(device)` → pornire dispozitiv
+9. `turnOffDevice(device)` → oprire dispozitiv
+10. `moveDevice(device, fromRoom, toRoom)` → mutare dispozitiv între camere
+11. `getDevicesByRoom(room)` → listare dispozitive per cameră
+12. `getDevicesSortedByConsum(room)` → listare dispozitive sortate după consum energetic
 
 ### SenzorService
-13. `addSenzor(room, senzor)` -> adăugare senzor într-o cameră
-14. `readSenzor(senzor)` -> citire valoare curentă a senzorului
-15. `updateSenzorValue(senzor, valoare)` -> actualizare manuală valoare senzor
-16. `simulateSenzorValue(senzor, min, max)` -> simulare valoare aleatoare în interval
+13. `addSenzor(room, senzor)` → adăugare senzor într-o cameră
+14. `readSenzor(senzor)` → citire valoare curentă a senzorului
+15. `updateSenzorValue(senzor, valoare)` → actualizare manuală valoare senzor
+16. `simulateSenzorValue(senzor, min, max)` → simulare valoare aleatoare în interval
 
 ### AutomationService
-17. `createRule(id, nume)` -> creare regulă de automatizare
-18. `addConditie(regula, id, senzor, operator, valoare)` -> adăugare condiție la regulă
-19. `addActiune(regula, id, device, comanda, valoare)` -> adăugare acțiune la regulă
-20. `activareRule(regula)` -> activare regulă
-21. `dezactivareRule(regula)` -> dezactivare regulă
-22. `executeRules()` -> evaluare și execuție automată a tuturor regulilor active
-23. `deleteRule(id)` -> ștergere regulă după id
+17. `createRule(id, nume)` → creare regulă de automatizare
+18. `addConditie(regula, id, senzor, operator, valoare)` → adăugare condiție la regulă
+19. `addActiune(regula, id, device, comanda, valoare)` → adăugare acțiune la regulă
+20. `activareRule(regula)` → activare regulă
+21. `dezactivareRule(regula)` → dezactivare regulă
+22. `executeRules()` → evaluare și execuție automată a tuturor regulilor active
+23. `deleteRule(id)` → ștergere regulă după id
 
 ### EnergieService
-24. `calculateConsum(house)` -> calcul consum energetic total (doar dispozitivele pornite)
-25. `generateRaportEnergie(id, house)` -> generare raport energie cu timestamp
+24. `calculateConsum(house)` → calcul consum energetic total (doar dispozitivele pornite)
+25. `generateRaportEnergie(id, house)` → generare raport energie cu timestamp
 
 ---
 
@@ -77,33 +77,48 @@ Aplicația permite gestionarea dispozitivelor, senzorilor și regulilor de autom
 
 ```
 src/
-├── Main.java                          — punct de intrare (demo + mod interactiv)
+├── Main.java                               — punct de intrare (demo + mod interactiv)
+├── schema.sql                              — schema MySQL (9 tabele)
+├── db.properties                           — configurare conexiune MySQL
+├── config/
+│   └── DatabaseConfig.java                 — singleton conexiune JDBC
+├── audit/
+│   └── AuditService.java                   — singleton audit → audit.csv
 ├── exception/
-│   ├── AppException.java              — excepție de bază (RuntimeException)
-│   ├── ValidationException.java       — erori de validare date
-│   ├── DuplicateEntityException.java  — entitate duplicat (id existent)
-│   └── NotFoundException.java         — entitate negăsită
+│   ├── AppException.java                   — excepție de bază (RuntimeException)
+│   ├── ValidationException.java            — erori de validare date
+│   ├── DuplicateEntityException.java       — entitate duplicat (id existent)
+│   └── NotFoundException.java              — entitate negăsită
 ├── model/
 │   ├── User.java
-│   ├── House.java                     — conține List<Room>
-│   ├── Room.java                      — conține List<Device> + Set<Senzor>
+│   ├── House.java                          — conține List<Room>
+│   ├── Room.java                           — conține List<Device> + Set<Senzor>
 │   ├── RaportEnergie.java
 │   ├── device/
-│   │   ├── Device.java                — clasă abstractă, implements Comparable<Device>
-│   │   ├── Lumina.java                — extends Device
-│   │   ├── Termostat.java             — extends Device
-│   │   ├── Camera.java                — extends Device
-│   │   └── DoorLock.java              — extends Device
+│   │   ├── Device.java                     — clasă abstractă, implements Comparable<Device>
+│   │   ├── Lumina.java                     — extends Device
+│   │   ├── Termostat.java                  — extends Device
+│   │   ├── Camera.java                     — extends Device
+│   │   └── DoorLock.java                   — extends Device
 │   ├── senzor/
-│   │   ├── Senzor.java                — clasă abstractă
-│   │   ├── SenzorTemperatura.java     — extends Senzor
-│   │   ├── SenzorMiscare.java         — extends Senzor
-│   │   ├── SenzorFum.java             — extends Senzor
-│   │   └── SenzorLumina.java          — extends Senzor
+│   │   ├── Senzor.java                     — clasă abstractă
+│   │   ├── SenzorTemperatura.java          — extends Senzor
+│   │   ├── SenzorMiscare.java              — extends Senzor
+│   │   ├── SenzorFum.java                  — extends Senzor
+│   │   └── SenzorLumina.java              — extends Senzor
 │   └── automatizare/
 │       ├── RegulaAutomatizare.java
 │       ├── Conditie.java
 │       └── Actiune.java
+├── repository/
+│   ├── AbstractRepository.java             — clasă generică abstractă (CRUD comun)
+│   ├── UserRepository.java                 — singleton CRUD pentru users
+│   ├── HouseRepository.java                — singleton CRUD pentru houses
+│   ├── RoomRepository.java                 — singleton CRUD pentru rooms
+│   ├── DeviceRepository.java               — singleton CRUD pentru devices
+│   ├── SenzorRepository.java               — singleton CRUD pentru senzori
+│   ├── RegulaAutomatizareRepository.java   — singleton CRUD + conditii + actiuni
+│   └── RaportEnergieRepository.java        — singleton CRUD pentru rapoarte
 ├── service/
 │   ├── HouseService.java
 │   ├── DeviceService.java
@@ -111,9 +126,39 @@ src/
 │   ├── AutomationService.java
 │   └── EnergieService.java
 └── ui/
-    ├── ConsoleReader.java             — utilitar citire date din terminal
-    └── SmartHomeConsoleApp.java        — interfață interactivă cu meniuri
+    ├── ConsoleReader.java                  — utilitar citire date din terminal
+    ├── SmartHomeConsoleApp.java            — interfață interactivă cu meniuri
+    └── fx/
+        ├── Launcher.java                   — entry point JavaFX
+        ├── SmartHomeFxApp.java             — Application JavaFX
+        ├── LoginWindow.java                — ecran autentificare
+        ├── RegisterWindow.java             — ecran înregistrare
+        ├── MainWindow.java                 — fereastra principală cu tab-uri
+        ├── AppContext.java                 — context partajat între ferestre
+        ├── Dialogs.java                    — utilitare dialog
+        └── tabs/
+            ├── CasaTab.java
+            ├── DeviceTab.java
+            ├── SenzorTab.java
+            ├── AutomationTab.java
+            └── EnergieTab.java
 ```
+
+---
+
+## Schema bazei de date (MySQL)
+
+Fișierul `src/schema.sql` definește 9 tabele cu relații de tip foreign key și ON DELETE CASCADE:
+
+```
+users ──< houses ──< rooms ──< devices
+                         └──< senzori
+                    └──< rapoarte_energie
+reguli_automatizare ──< conditii (→ senzori)
+                    └──< actiuni  (→ devices)
+```
+
+**Strategia de moștenire:** Single-Table Inheritance cu coloana discriminatorie `type` pentru ierarhiile `Device` (LUMINA / TERMOSTAT / CAMERA / DOORLOCK) și `Senzor` (TEMPERATURA / LUMINA / MISCARE / FUM).
 
 ---
 
@@ -136,44 +181,55 @@ Prezintă cele 5 servicii ale aplicației și metodele expuse de fiecare.
 
 ---
 
-## Cerințe tehnice acoperite (Etapa I)
+## Cerințe tehnice acoperite
+
+### Etapa I
 
 | Cerință | Implementare | Locație în cod |
 |---|---|---|
-| Minim 8 tipuri de obiecte | 17 clase model | `src/model/` — User, House, Room, 4 Device-uri, 4 Senzori, RegulaAutomatizare, Conditie, Actiune, RaportEnergie |
-| Minim 10 acțiuni/interogări | 25 operații în 5 servicii | `src/service/` — HouseService (5), DeviceService (7), SenzorService (4), AutomationService (7), EnergieService (2) |
-| Clase cu atribute private/protected + metode de acces | Toate clasele folosesc encapsulare | Ex: `User.java` — atribute `private`, getteri/setteri publici; `Device.java` — `protected String nume`, `protected boolean status`; `Senzor.java` — `protected double valoare` |
-| Minim 2 colecții diferite | 3 tipuri: List, Set, Map | `List<Room>` în House, `List<Device>` în Room, `Set<Senzor>` (HashSet) în Room, `TreeMap<Integer, RegulaAutomatizare>` în AutomationService |
-| Minim 1 colecție sortată | TreeMap + Collections.sort cu Comparable | `TreeMap` în `AutomationService.reguli` (sortare automată pe cheie); `DeviceService.getDevicesSortedByConsum()` folosește `Collections.sort()` cu `Comparable<Device>` |
-| Fără array-uri pentru parcurgerea colecțiilor | Toate iterările folosesc colecții Java | For-each pe List/Set/Map.values(), streams cu `anyMatch()` |
-| Moștenire | 3 ierarhii de clase | Device → Lumina, Termostat, Camera, DoorLock; Senzor → 4 subclase; AppException → 3 subclase |
-| Clase serviciu | 5 clase de serviciu | `HouseService`, `DeviceService`, `SenzorService`, `AutomationService`, `EnergieService` |
-| Clasă Main | Demo automat + mod interactiv | `Main.java` — apeluri către toate serviciile |
+| Minim 8 tipuri de obiecte | 17 clase model | `src/model/` |
+| Minim 10 acțiuni/interogări | 25 operații în 5 servicii | `src/service/` |
+| Clase cu atribute private/protected + metode de acces | Toate clasele folosesc encapsulare | `User.java`, `Device.java`, `Senzor.java` |
+| Minim 2 colecții diferite | List, Set, TreeMap | `List<Room>` în House, `Set<Senzor>` în Room, `TreeMap` în AutomationService |
+| Minim 1 colecție sortată | TreeMap + Collections.sort cu Comparable | `TreeMap` în AutomationService; `DeviceService.getDevicesSortedByConsum()` |
+| Moștenire | 3 ierarhii | Device → 4 subclase; Senzor → 4 subclase; AppException → 3 subclase |
+| Clase serviciu | 5 servicii | HouseService, DeviceService, SenzorService, AutomationService, EnergieService |
+| Clasă Main | Demo automat + mod interactiv | `Main.java` |
+
+### Etapa II
+
+| Cerință | Implementare | Locație în cod |
+|---|---|---|
+| Persistență cu bază de date relațională + JDBC | MySQL + JDBC pur (fără ORM) | `src/config/DatabaseConfig.java`, `src/schema.sql` |
+| Servicii singleton generice pentru CRUD | `AbstractRepository<T>` — clasă generică abstractă cu `findById`, `findAll`, `deleteById`, `deleteAll`, `save`, `update` | `src/repository/AbstractRepository.java` |
+| CRUD pentru cel puțin 4 clase | CRUD complet pentru 7 entități: User, House, Room, Device, Senzor, RegulaAutomatizare (+ Conditie/Actiune), RaportEnergie | `src/repository/` |
+| Serviciu de audit CSV | `AuditService` singleton, scrie `nume_actiune,timestamp` la fiecare operație | `src/audit/AuditService.java` → `audit.csv` |
 
 ---
 
 ## Moduri de rulare
 
 ### 1. Demo automat (opțiunea 1)
-Rulează un scenariu complet preconfigurat: creează o casă cu 4 camere, adaugă dispozitive și senzori, creează reguli de automatizare, le execută și generează un raport de energie.
+Resetează baza de date, recreează toate datele de la zero: casă cu 4 camere, dispozitive, senzori, reguli de automatizare, raport de energie. Toate operațiile sunt logate în `audit.csv`.
 
-### 2. Mod interactiv (opțiunea 2)
-Interfață cu meniuri în consolă care permite utilizatorului să:
-- Creeze case, camere, dispozitive, senzori
-- Controleze dispozitivele (pornire/oprire/mutare)
-- Definească și execute reguli de automatizare
-- Genereze rapoarte de energie
+### 2. Mod interactiv consolă (opțiunea 2)
+Încarcă datele existente din DB și oferă un meniu interactiv pentru toate operațiile.
+
+### 3. Interfață grafică JavaFX
+Ecran de login/register cu autentificare prin MySQL, urmat de o fereastră principală cu tab-uri pentru Case, Dispozitive, Senzori, Automatizări și Energie.
 
 ---
 
 ## Etape dezvoltare
 
 - [x] **Etapa I** — Definirea sistemului și implementarea in-memory
-- [ ] **Etapa II** — Persistență cu bază de date relațională (JDBC) + serviciu de audit CSV
+- [x] **Etapa II** — Persistență MySQL + JDBC + serviciu de audit CSV + interfață JavaFX
 
 ---
 
 ## Tehnologii
 
-- **Java 21**
-- **JDBC + SQLite/PostgreSQL** *(Etapa II)*
+- **Java 17**
+- **MySQL 8** + **JDBC** (mysql-connector-j 8.4.0)
+- **JavaFX 21.0.4** — interfață grafică
+- **Maven** — build & dependency management
