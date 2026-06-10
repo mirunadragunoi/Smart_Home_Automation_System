@@ -12,7 +12,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Serviciu singleton de audit. Pentru fiecare actiune se adauga in audit.csv
+ * serviciu singleton de audit
+ * pentru fiecare actiune se adauga in audit.csv
  * un rand cu formatul: nume_actiune,timestamp
  */
 public final class AuditService {

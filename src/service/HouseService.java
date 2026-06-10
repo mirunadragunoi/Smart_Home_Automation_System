@@ -88,7 +88,7 @@ public class HouseService {
         return Collections.unmodifiableList(houses);
     }
 
-    /** Incarca toate casele si camerele din DB in memoria serviciului. */
+    // ca sa incarc toate casele si camerele din db in memoria serviciului
     public void loadFromDatabase() {
         houses.clear();
         for (House h : houseRepository.findAll()) {

@@ -12,30 +12,31 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Baza generica pentru repository-uri. Subclasele sunt singleton-uri (getInstance() static).
- * Subclasele furnizeaza maparea ResultSet -> T si SQL-urile specifice tabelei.
+ * baza generica pentru repository-uri
+ * subclasele sunt singleton-uri cu getInstance() static
+ * subclasele furnizeaza maparea ResultSet -> T si SQL-urile specifice tabelei
  *
- * @param <T> tipul entitatii pe care o gestioneaza repository-ul
  */
+
 public abstract class AbstractRepository<T> {
 
     protected Connection getConnection() {
         return DatabaseConfig.getInstance().getConnection();
     }
 
-    /** Numele tabelei in PostgreSQL */
+    /** numele tabelei in PostgreSQL */
     protected abstract String getTableName();
 
-    /** Constructie obiect T din ResultSet (din linia curenta) */
+    /** constructie obiect T din ResultSet (din linia curenta) */
     protected abstract T mapRow(ResultSet rs) throws SQLException;
 
-    /** Insereaza o entitate; statement-ul deja are bind-urile completate de catre subclasa */
+    /** insereaza o entitate; statement-ul deja are bind-urile completate de catre subclasa */
     public abstract void save(T entity);
 
-    /** Update pe entitate dupa id */
+    /** update pe entitate dupa id */
     public abstract void update(T entity);
 
-    /** Sterge dupa id */
+    /** sterge dupa id */
     public void deleteById(int id) {
         String sql = "DELETE FROM " + getTableName() + " WHERE id = ?";
         try (PreparedStatement ps = getConnection().prepareStatement(sql)) {

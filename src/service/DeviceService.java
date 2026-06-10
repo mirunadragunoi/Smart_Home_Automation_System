@@ -105,7 +105,6 @@ public class DeviceService {
         return Collections.unmodifiableList(allDevices);
     }
 
-    /** Incarca in memorie toate device-urile din DB si le ataseaza camerelor primite. */
     public void loadFromDatabase(List<Room> rooms) {
         allDevices.clear();
         java.util.Map<Integer, Room> roomById = new java.util.HashMap<>();

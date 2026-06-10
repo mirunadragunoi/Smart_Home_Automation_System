@@ -6,7 +6,7 @@ import javafx.scene.control.ButtonType;
 
 import java.util.Optional;
 
-/** Mici utilitare pentru ferestrele de alerta. */
+/** mici utilitare pentru ferestrele de alerta */
 public final class Dialogs {
 
     private Dialogs() {}

@@ -199,7 +199,6 @@ public class AutomationService {
         }
     }
 
-    /** Incarca regulile + conditiile + actiunile din DB. */
     public void loadFromDatabase() {
         reguli.clear();
         for (RegulaAutomatizare r : regulaRepository.findAll()) {

@@ -10,9 +10,11 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 /**
- * Singleton pentru conexiunea JDBC. Citeste credentialele din src/db.properties.
- * Conexiunea este pastrata deschisa pe toata durata aplicatiei si inchisa la finalul ei.
+ * singleton pentru conexiunea JDBC
+ * citeste credentialele din src/db.properties
+ * conexiunea este pastrata deschisa pe toata durata aplicatiei si inchisa la finalul ei
  */
+
 public final class DatabaseConfig {
     private static final String PROPERTIES_FILE = "/db.properties";
 

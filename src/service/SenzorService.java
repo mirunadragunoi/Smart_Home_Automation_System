@@ -72,7 +72,6 @@ public class SenzorService {
         return Collections.unmodifiableList(allSenzori);
     }
 
-    /** Incarca in memorie senzorii din DB. Daca primeste lista de camere, ii ataseaza in arbore. */
     public void loadFromDatabase() {
         loadFromDatabase(null);
     }
