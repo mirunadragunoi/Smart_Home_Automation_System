@@ -13,14 +13,13 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import model.User;
-import repository.UserRepository;
+import service.UserService;
 
 public class RegisterWindow {
 
     private final Stage owner;
     private final TextField emailFieldFromLogin;
-    private final UserRepository userRepository = UserRepository.getInstance();
+    private final UserService userService = AppContext.getInstance().getUserService();
 
     public RegisterWindow(Stage owner, TextField emailFieldFromLogin) {
         this.owner = owner;
@@ -62,35 +61,20 @@ public class RegisterWindow {
             String password = passwordField.getText();
             String confirm = confirmField.getText();
 
-            if (nume.isEmpty() || email.isEmpty() || password == null || password.isEmpty()) {
-                statusLabel.setText("Completeaza toate campurile.");
-                return;
-            }
-            if (password.length() < 6) {
-                statusLabel.setText("Parola trebuie sa aiba minim 6 caractere.");
-                return;
-            }
             if (!password.equals(confirm)) {
                 statusLabel.setText("Parolele nu coincid.");
                 return;
             }
 
             try {
-                if (userRepository.findByEmail(email).isPresent()) {
-                    statusLabel.setText("Email-ul este deja inregistrat.");
-                    return;
-                }
-                int id = userRepository.nextId();
-                User user = new User(id, nume, email, password);
-                userRepository.save(user);
-
+                userService.register(nume, email, password);
                 Dialogs.info("Cont creat", "Contul a fost creat cu succes. Te poti loga acum.");
                 if (emailFieldFromLogin != null) {
                     emailFieldFromLogin.setText(email);
                 }
                 stage.close();
             } catch (Exception ex) {
-                statusLabel.setText("Eroare: " + ex.getMessage());
+                statusLabel.setText(ex.getMessage());
             }
         });
 

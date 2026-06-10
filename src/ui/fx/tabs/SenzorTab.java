@@ -66,6 +66,9 @@ public class SenzorTab {
         addBtn.setStyle("-fx-background-color: #1976d2; -fx-text-fill: white;");
         addBtn.setOnAction(e -> handleAdd());
 
+        Button removeBtn = new Button("Sterge");
+        removeBtn.setOnAction(e -> handleRemove());
+
         Button readBtn = new Button("Citeste valoare");
         readBtn.setOnAction(e -> handleRead());
 
@@ -76,7 +79,7 @@ public class SenzorTab {
         simulateBtn.setStyle("-fx-background-color: #ff9800; -fx-text-fill: white;");
         simulateBtn.setOnAction(e -> handleSimulate());
 
-        HBox actions = new HBox(10, addBtn, readBtn, setBtn, simulateBtn);
+        HBox actions = new HBox(10, addBtn, removeBtn, readBtn, setBtn, simulateBtn);
 
         HBox filters = new HBox(10,
                 new Label("Casa:"), houseCombo,
@@ -194,6 +197,17 @@ public class SenzorTab {
                 refreshSenzori();
             } catch (Exception ex) { Dialogs.error("Eroare", ex.getMessage()); }
         });
+    }
+
+    private void handleRemove() {
+        Senzor s = senzoriTable.getSelectionModel().getSelectedItem();
+        Room room = roomCombo.getValue();
+        if (s == null || room == null) { Dialogs.error("Atentie", "Selecteaza un senzor."); return; }
+        if (!Dialogs.confirm("Confirmare", "Sterg senzorul '" + s.getNume() + "'?")) return;
+        try {
+            senzorService.removeSenzor(room, s);
+            refreshSenzori();
+        } catch (Exception ex) { Dialogs.error("Eroare", ex.getMessage()); }
     }
 
     private void handleRead() {

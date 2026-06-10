@@ -227,6 +227,146 @@ Ecran de login/register cu autentificare prin MySQL, urmat de o fereastră princ
 
 ---
 
+## Cum a fost implementată extinderea cu baza de date
+
+### Conexiunea JDBC — `DatabaseConfig` (Singleton)
+
+Conexiunea la MySQL este gestionată printr-un Singleton în `src/config/DatabaseConfig.java`. La prima utilizare, citește credențialele din fișierul `src/db.properties` (url, user, password), înregistrează driverul MySQL (`com.mysql.cj.jdbc.Driver`) și deschide o conexiune JDBC care rămâne activă pe toată durata aplicației. Metoda `getConnection()` verifică dacă conexiunea e încă deschisă și o recreează dacă a fost închisă.
+
+```
+db.url=jdbc:mysql://localhost:3306/smart_house_db
+db.user=root
+db.password=...
+```
+
+### Schema bazei de date — `schema.sql`
+
+Sunt definite **9 tabele** cu relații de tip foreign key și `ON DELETE CASCADE`:
+
+```
+users ──< houses ──< rooms ──< devices
+                         └──< senzori
+                    └──< rapoarte_energie
+reguli_automatizare ──< conditii (→ senzori)
+                    └──< actiuni  (→ devices)
+```
+
+**Strategia Single-Table Inheritance:** Ierarhiile de clase (`Device`, `Senzor`) sunt stocate fiecare într-un singur tabel, cu o coloană `type` care indică subtipul real (ex: `LUMINA`, `TERMOSTAT`, `CAMERA`, `DOORLOCK`). Coloanele specifice subtipurilor sunt nullable. La citire din baza de date, metoda `mapRow()` citește `type` și instanțiază subclasa corectă prin `switch`.
+
+### Repository-uri generice — `AbstractRepository<T>`
+
+Clasa abstractă generică `AbstractRepository<T>` din `src/repository/AbstractRepository.java` conține o singură dată implementările pentru:
+- `findById(int id)` — `SELECT * FROM <tabel> WHERE id = ?`
+- `findAll()` — `SELECT * FROM <tabel>`
+- `deleteById(int id)` — `DELETE FROM <tabel> WHERE id = ?`
+- `deleteAll()` — `DELETE FROM <tabel>`
+
+Subclasele trebuie să implementeze doar:
+- `getTableName()` → numele tabelului (ex: `"houses"`)
+- `mapRow(ResultSet rs)` → construiește obiectul din linia curentă din ResultSet
+- `save(T entity)` → `INSERT` cu parametrii specifici entității
+- `update(T entity)` → `UPDATE` cu parametrii specifici
+
+**Fiecare repository este și Singleton** cu `getInstance()` synchronized, astfel că există o singură instanță care accesează conexiunea din `DatabaseConfig`.
+
+Toate query-urile folosesc `PreparedStatement` (nu `Statement`) pentru a preveni SQL injection — parametrii sunt trimiși separat de interogare.
+
+### CRUD pentru 7 entități
+
+| Repository | Tabel | Metode speciale |
+|---|---|---|
+| `UserRepository` | users | `findByEmail(email)`, `nextId()` |
+| `HouseRepository` | houses | `findByOwnerId(ownerId)` |
+| `RoomRepository` | rooms | `saveForHouse(room, houseId)`, `findByHouseId(houseId)` |
+| `DeviceRepository` | devices | `saveForRoom(device, roomId)`, `findByRoomId(roomId)`, `updateRoom(deviceId, roomId)`, `nextId()` |
+| `SenzorRepository` | senzori | `saveForRoom(senzor, roomId)`, `findByRoomId(roomId)` |
+| `RegulaAutomatizareRepository` | reguli + conditii + actiuni | `saveConditie`, `saveActiune`, `findConditiiByRegulaId`, `findActiuniByRegulaId` |
+| `RaportEnergieRepository` | rapoarte_energie | — |
+
+### Serviciul de audit CSV — `AuditService`
+
+`AuditService` este un Singleton care scrie în `audit.csv` câte o linie la fiecare operație care modifică starea:
+```
+nume_actiune,timestamp
+createHouse,2025-06-09T14:23:01.452
+addDevice,2025-06-09T14:23:01.502
+turnOnDevice,2025-06-09T14:23:01.510
+```
+Fișierul este deschis cu `StandardOpenOption.APPEND`, deci nu se suprascrie niciodată. Dacă nu există, este creat automat cu header la prima scriere.
+
+---
+
+## Cum a fost implementată interfața grafică JavaFX
+
+### Structura lansării — `Launcher` și `SmartHomeFxApp`
+
+JavaFX nu poate fi pornit direct din `main()` fără un workaround, de aceea există clasa `Launcher` (fără a extinde `Application`) care apelează `Application.launch(SmartHomeFxApp.class)`. `SmartHomeFxApp` extinde `Application` și în `start(Stage)` afișează prima fereastră — `LoginWindow`.
+
+### Fluxul de navigare între ferestre
+
+```
+Launcher.main()
+    └── SmartHomeFxApp.start(Stage)
+            └── LoginWindow.show()        ← utilizatorul introduce email + parolă
+                    ├── RegisterWindow    ← fereastră modală pentru cont nou
+                    └── MainWindow.show() ← după autentificare reușită
+```
+
+**LoginWindow** (`src/ui/fx/LoginWindow.java`):
+- Construiește un formular cu `VBox`: câmpuri `TextField` pentru email și `PasswordField` pentru parolă, un `Button` de login și un `Hyperlink` spre înregistrare.
+- Stilizare inline cu gradient albastru (`-fx-background-color: linear-gradient(...)`).
+- La click pe Login: validează câmpurile, apelează `UserRepository.findByEmail(email)`, compară parola, și dacă totul e OK → setează userul în `AppContext` și afișează `MainWindow`.
+
+**RegisterWindow** (`src/ui/fx/RegisterWindow.java`):
+- Se deschide ca fereastră modală (`Modality.WINDOW_MODAL`) peste Login.
+- Validează: câmpuri completate, parolă minim 6 caractere, parolele coincid, email-ul nu e deja înregistrat.
+- La succes: apelează `userRepository.save(user)` și pre-completează câmpul email din LoginWindow.
+
+### `AppContext` — contextul partajat
+
+`AppContext` este un Singleton care ține starea globală a aplicației JavaFX:
+- instanțele celor 5 servicii (`HouseService`, `DeviceService`, `SenzorService`, `AutomationService`, `EnergieService`)
+- userul curent autentificat (`currentUser`)
+- casa curent selectată (`currentHouse`)
+
+Toate tab-urile și ferestrele accesează serviciile prin `AppContext.getInstance()` — nu există injecție de dependențe, contextul joacă rol de registru global.
+
+### `MainWindow` — fereastra principală cu tab-uri
+
+După autentificare, `MainWindow` apelează `loadDataForCurrentUser()` care încarcă datele din DB în memorie prin metodele `loadFromDatabase()` ale fiecărui serviciu (în ordinea corectă: case → camere → device-uri și senzori → reguli). Structura vizuală este un `BorderPane`:
+- **Top**: un header albastru cu numele aplicației, salutare cu userul logat și buton de Logout.
+- **Center**: un `TabPane` cu 5 tab-uri cu închidere dezactivată.
+
+La schimbarea tab-ului activ, se apelează automat `refresh()` pe tab-ul respectiv pentru a sincroniza datele afișate.
+
+### Tab-urile — structura comună
+
+Fiecare tab urmează același pattern:
+1. Are o clasă proprie în `src/ui/fx/tabs/` cu metoda `getView()` care returnează un `VBox`.
+2. Conține `ComboBox`-uri pentru selecție (casă, cameră) și un `TableView` cu `ObservableList` pentru afișarea datelor.
+3. `TableColumn`-urile folosesc `CellValueFactory` cu proprietăți JavaFX (`SimpleStringProperty`, `SimpleIntegerProperty`, `SimpleBooleanProperty`, `SimpleDoubleProperty`) pentru binding.
+4. Butoanele (Adaugă, Șterge, Toggle, Mută) deschid `Dialog`-uri cu `GridPane` pentru introducerea datelor noi.
+
+**Tab Device-uri** (`DeviceTab`):
+- Filtrare în cascadă: selectezi Casa → se populează ComboBox-ul de Camere → se populează tabelul cu device-urile din acea cameră.
+- Checkbox „Sortează după consum" comută între lista normală și `deviceService.getDevicesSortedByConsum(room)`.
+- Dialogul de adăugare are câmpuri dinamice: tipul selectat din ComboBox schimbă label-urile și valorile implicite pentru câmpurile specifice (ex: pentru `Lumina` apare „Luminozitate" și „Culoare", pentru `Termostat` apare „Temp curentă" și „Temp țintă").
+
+**Tab Senzori** (`SenzorTab`): același pattern cu ComboBox casă/cameră, tabel de senzori și butoane pentru adăugare, ștergere și simulare valoare (generează o valoare aleatoare în intervalul specificat).
+
+**Tab Automatizări** (`AutomationTab`): listează regulile, permite adăugarea de condiții și acțiuni la o regulă selectată, activare/dezactivare și execuție manuală a tuturor regulilor.
+
+**Tab Energie** (`EnergieTab`): afișează consumul calculat pentru casa selectată și listează rapoartele generate anterior.
+
+---
+
+## Etape dezvoltare
+
+- [x] **Etapa I** — Definirea sistemului și implementarea in-memory
+- [x] **Etapa II** — Persistență MySQL + JDBC + serviciu de audit CSV + interfață JavaFX
+
+---
+
 ## Tehnologii
 
 - **Java 17**

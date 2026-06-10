@@ -7,6 +7,7 @@ import service.DeviceService;
 import service.EnergieService;
 import service.HouseService;
 import service.SenzorService;
+import service.UserService;
 
 /**
  * Singleton care tine starea aplicatiei JavaFX: user curent, casa activa, servicii.
@@ -15,6 +16,7 @@ public final class AppContext {
 
     private static AppContext instance;
 
+    private final UserService userService = new UserService();
     private final HouseService houseService = new HouseService();
     private final DeviceService deviceService = new DeviceService();
     private final SenzorService senzorService = new SenzorService();
@@ -33,6 +35,7 @@ public final class AppContext {
         return instance;
     }
 
+    public UserService getUserService() { return userService; }
     public HouseService getHouseService() { return houseService; }
     public DeviceService getDeviceService() { return deviceService; }
     public SenzorService getSenzorService() { return senzorService; }

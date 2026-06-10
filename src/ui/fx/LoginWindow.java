@@ -14,14 +14,12 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import model.User;
-import repository.UserRepository;
-
-import java.util.Optional;
+import service.UserService;
 
 public class LoginWindow {
 
     private final Stage stage;
-    private final UserRepository userRepository = UserRepository.getInstance();
+    private final UserService userService = AppContext.getInstance().getUserService();
 
     public LoginWindow(Stage stage) {
         this.stage = stage;
@@ -81,32 +79,12 @@ public class LoginWindow {
 
     private void handleLogin(String email, String password, Label statusLabel) {
         statusLabel.setText("");
-        if (email == null || email.trim().isEmpty()) {
-            statusLabel.setText("Introdu email-ul.");
-            return;
-        }
-        if (password == null || password.isEmpty()) {
-            statusLabel.setText("Introdu parola.");
-            return;
-        }
-
         try {
-            Optional<User> userOpt = userRepository.findByEmail(email.trim());
-            if (userOpt.isEmpty()) {
-                statusLabel.setText("Email-ul nu este inregistrat.");
-                return;
-            }
-            User user = userOpt.get();
-            if (!user.getPassword().equals(password)) {
-                statusLabel.setText("Parola este incorecta.");
-                return;
-            }
-
-            AppContext ctx = AppContext.getInstance();
-            ctx.setCurrentUser(user);
+            User user = userService.login(email, password);
+            AppContext.getInstance().setCurrentUser(user);
             new MainWindow(stage).show();
         } catch (Exception ex) {
-            statusLabel.setText("Eroare: " + ex.getMessage());
+            statusLabel.setText(ex.getMessage());
         }
     }
 }

@@ -2,6 +2,7 @@ package service;
 
 import audit.AuditService;
 import exception.DuplicateEntityException;
+import exception.NotFoundException;
 import exception.ValidationException;
 import model.Room;
 import model.senzor.Senzor;
@@ -36,6 +37,19 @@ public class SenzorService {
         senzorRepository.saveForRoom(senzor, room.getId());
         audit.log("addSenzor");
         System.out.println("Senzor adaugat in " + room.getNume() + ": " + senzor);
+    }
+
+    public void removeSenzor(Room room, Senzor senzor) {
+        requireNonNull(room, "Camera nu poate fi null.");
+        requireNonNull(senzor, "Senzorul nu poate fi null.");
+        if (!room.removeSenzor(senzor)) {
+            throw new NotFoundException("Senzorul nu exista in camera " + room.getNume());
+        }
+        allSenzori.removeIf(s -> s.getId() == senzor.getId());
+        senzor.setRoom(null);
+        senzorRepository.deleteById(senzor.getId());
+        audit.log("removeSenzor");
+        System.out.println("Senzor sters: " + senzor.getNume() + " din " + room.getNume());
     }
 
     public double readSenzor(Senzor senzor) {
