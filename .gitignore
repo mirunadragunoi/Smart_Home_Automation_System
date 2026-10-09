@@ -28,3 +28,17 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Build output ###
+target/
+out/
+
+### IntelliJ project files ###
+.idea/
+*.iml
+
+### Local config & generated files ###
+# Local DB credentials (copy db.properties.example -> db.properties)
+src/db.properties
+# Runtime-generated audit log
+audit.csv

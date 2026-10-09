@@ -1,375 +1,395 @@
 # Smart Home Automation System
 
-Sistem de automatizare a unei case inteligente, dezvoltat în **Java**, ca proiect pentru disciplina **Programare Avansată pe Obiecte - Java**.
+A desktop smart-home management application in Java 17: manage houses, rooms, devices
+and sensors, define IF-THEN automation rules, and track energy consumption — persisted
+in MySQL through plain JDBC, with both a console interface and a JavaFX GUI.
 
-Aplicația permite gestionarea dispozitivelor, senzorilor și regulilor de automatizare dintr-o locuință inteligentă, oferind funcționalități de monitorizare a consumului energetic, execuție automată a acțiunilor pe baza condițiilor din mediu, persistență în bază de date MySQL și audit CSV al acțiunilor.
+![Java](https://img.shields.io/badge/Java-17-orange)
+![Build](https://img.shields.io/badge/Build-Maven-blue)
+![Database](https://img.shields.io/badge/Database-MySQL%208-4479A1)
+![GUI](https://img.shields.io/badge/GUI-JavaFX%2021-1abc9c)
 
----
-
-## Tema aleasă
-
-**Smart House** - Sistem de management al unei case inteligente care permite controlul dispozitivelor (lumini, termostate, camere de securitate, yale inteligente), monitorizarea senzorilor (temperatură, mișcare, fum, lumină) și automatizarea acțiunilor pe baza regulilor definite de utilizator.
-
----
-
-## Tipuri de obiecte (17 clase model)
-
-1. **User** → utilizatorul care deține casa
-2. **House** → casa inteligentă, conține camere
-3. **Room** → cameră din casă, conține dispozitive și senzori
-4. **Device** *(abstract)* → dispozitiv generic
-5. **Lumina** → dispozitiv de iluminat (luminozitate, culoare)
-6. **Termostat** → dispozitiv de control al temperaturii
-7. **Camera** → cameră de supraveghere video
-8. **DoorLock** → yală inteligentă
-9. **Senzor** *(abstract)* → senzor generic
-10. **SenzorTemperatura** → senzor de temperatură
-11. **SenzorMiscare** → senzor de mișcare
-12. **SenzorFum** → senzor de fum
-13. **SenzorLumina** → senzor de lumină ambientală
-14. **RegulaAutomatizare** → regulă de automatizare (condiții + acțiuni)
-15. **Conditie** → condiție bazată pe un senzor
-16. **Actiune** → acțiune executată pe un dispozitiv
-17. **RaportEnergie** → raport de consum energetic
+**Jump to:** [Features](#features) · [Tech stack](#tech-stack) · [Architecture](#architecture) ·
+[Domain model](#domain-model) · [Key concepts & design decisions](#key-concepts--design-decisions) ·
+[Database schema](#database-schema) · [Getting started](#getting-started) ·
+[Project structure](#project-structure) · [Known limitations](#known-limitations--possible-improvements)
 
 ---
 
-## Acțiuni / Interogări (25 operații)
+## Screenshots
 
-### HouseService
-1. `createHouse(id, adresa, owner)` → creare casă nouă asociată unui utilizator
-2. `addRoom(house, id, nume, type)` → adăugare cameră în casă
-3. `removeRoom(house, room)` → ștergere cameră din casă
-4. `getRooms(house)` → listare camere dintr-o casă
-5. `getAllHouses()` → listare toate casele
+<!-- TODO: add docs/screenshots/login.png        — JavaFX login screen -->
+<!-- TODO: add docs/screenshots/devices-tab.png   — Devices tab with cascade house -> room filtering -->
+<!-- TODO: add docs/screenshots/automation-tab.png — Automation tab showing rules, conditions and actions -->
 
-### DeviceService
-6. `addDevice(room, device)` → adăugare dispozitiv într-o cameră
-7. `removeDevice(room, device)` → ștergere dispozitiv din cameră
-8. `turnOnDevice(device)` → pornire dispozitiv
-9. `turnOffDevice(device)` → oprire dispozitiv
-10. `moveDevice(device, fromRoom, toRoom)` → mutare dispozitiv între camere
-11. `getDevicesByRoom(room)` → listare dispozitive per cameră
-12. `getDevicesSortedByConsum(room)` → listare dispozitive sortate după consum energetic
-
-### SenzorService
-13. `addSenzor(room, senzor)` → adăugare senzor într-o cameră
-14. `readSenzor(senzor)` → citire valoare curentă a senzorului
-15. `updateSenzorValue(senzor, valoare)` → actualizare manuală valoare senzor
-16. `simulateSenzorValue(senzor, min, max)` → simulare valoare aleatoare în interval
-
-### AutomationService
-17. `createRule(id, nume)` → creare regulă de automatizare
-18. `addConditie(regula, id, senzor, operator, valoare)` → adăugare condiție la regulă
-19. `addActiune(regula, id, device, comanda, valoare)` → adăugare acțiune la regulă
-20. `activareRule(regula)` → activare regulă
-21. `dezactivareRule(regula)` → dezactivare regulă
-22. `executeRules()` → evaluare și execuție automată a tuturor regulilor active
-23. `deleteRule(id)` → ștergere regulă după id
-
-### EnergieService
-24. `calculateConsum(house)` → calcul consum energetic total (doar dispozitivele pornite)
-25. `generateRaportEnergie(id, house)` → generare raport energie cu timestamp
+> Screenshots require a running MySQL instance and a display, so they are not committed yet.
+> See [Getting started](#getting-started) to run the app, then drop the images into `docs/screenshots/`.
 
 ---
 
-## Structura proiectului
+## Features
+
+- Manage **houses** and the **rooms** inside them, scoped to the logged-in user.
+- Control **4 device types** — lights, thermostats, security cameras, smart door locks
+  (turn on/off, move between rooms, adjust type-specific settings).
+- Simulate **4 sensor types** — temperature, motion, smoke and ambient light, with manual
+  or randomly generated readings.
+- Define **IF-THEN automation rules**: a set of sensor conditions (AND logic) that trigger
+  a set of device actions.
+- Compute **energy consumption** per house and generate timestamped energy reports.
+- Append-only **audit trail** of every state-changing operation to a CSV file.
+- **3 run modes:** an automated demo, an interactive console menu, and a JavaFX desktop GUI.
+
+---
+
+## Tech stack
+
+| Layer           | Technology                                   | Notes                                                        |
+| --------------- | -------------------------------------------- | ------------------------------------------------------------ |
+| Language        | Java 17                                      | Uses records-era features such as `switch` expressions and pattern matching |
+| Build           | Maven                                        | Non-standard `sourceDirectory=src`; `.sql`/`.properties` bundled as resources |
+| Database        | MySQL 8                                       | 9-table relational schema with foreign keys and `ON DELETE CASCADE` |
+| Data access     | JDBC (`mysql-connector-j` 8.4.0), no ORM     | `PreparedStatement` throughout; single shared `Connection`   |
+| GUI             | JavaFX 21.0.4 (controls, graphics, base)     | `javafx-maven-plugin`; `TableView` + property binding        |
+| Audit           | Plain CSV (`java.nio`)                        | Append-only log, one line per state-changing operation       |
+
+---
+
+## Architecture
+
+The code is organised in layers, with dependencies pointing downward only. The UI (console
+or JavaFX) calls **services**, which hold business rules and in-memory domain state; services
+call **repositories**, which translate between objects and SQL rows; repositories obtain their
+JDBC `Connection` from a single `DatabaseConfig`. The `AuditService` sits to the side and is
+invoked by services on every state-changing operation.
+
+```mermaid
+flowchart TD
+    subgraph UI["UI layer"]
+        Console["Console<br/>(Main, SmartHomeConsoleApp)"]
+        FX["JavaFX<br/>(Launcher, windows, 5 tabs)"]
+    end
+    subgraph SVC["Service layer"]
+        Services["HouseService · DeviceService · SenzorService<br/>AutomationService · EnergieService · UserService"]
+    end
+    subgraph REPO["Repository layer"]
+        Repos["AbstractRepository&lt;T&gt;<br/>+ 7 concrete repositories"]
+    end
+    DB["DatabaseConfig<br/>(single JDBC Connection)"]
+    MySQL[("MySQL 8")]
+    Audit["AuditService"]
+    CSV[("audit.csv")]
+
+    Console --> Services
+    FX --> Services
+    Services --> Repos
+    Services -. logs .-> Audit
+    Repos --> DB
+    DB --> MySQL
+    Audit --> CSV
+```
+
+The repository responsibilities are illustrated further in the existing design diagrams:
+
+- [Class diagram](docs/diagrama_clase.png) — all entities, attributes and inheritance relationships
+- [Application logic](docs/logica_clase.png) — how `User`, `House`, `Room`, devices, sensors and rules relate
+- [System operations](docs/operatii_sistem.png) — the service layer and the operations it exposes
+
+---
+
+## Domain model
+
+```
+User ──owns──> House ──contains──> Room ──contains──> Device (abstract)
+                                        └──contains──> Senzor (abstract)
+
+Device (abstract)                 Senzor (abstract)
+├── Lumina        (light)         ├── SenzorTemperatura  (temperature)
+├── Termostat     (thermostat)    ├── SenzorMiscare      (motion)
+├── Camera        (security cam)  ├── SenzorFum          (smoke)
+└── DoorLock      (smart lock)    └── SenzorLumina       (ambient light)
+
+RegulaAutomatizare (automation rule) = List<Conditie> (on sensors) + List<Actiune> (on devices)
+RaportEnergie (energy report)        = per-house consumption snapshot with a timestamp
+```
+
+The codebase uses Romanian identifiers. Glossary for readers:
+
+| Code (Romanian)       | English            | Code (Romanian) | English       |
+| --------------------- | ------------------ | --------------- | ------------- |
+| `Casa` / `House`      | House              | `Senzor`        | Sensor        |
+| `Camera` (Room `type`)| Room / camera*     | `Miscare`       | Motion        |
+| `Lumina`              | Light              | `Fum`           | Smoke         |
+| `Termostat`           | Thermostat         | `RegulaAutomatizare` | Automation rule |
+| `DoorLock`            | Smart lock         | `Conditie`      | Condition     |
+| `Consum`              | Consumption        | `Actiune`       | Action        |
+| `Putere`              | Power              | `RaportEnergie` | Energy report |
+
+\* `Camera` is also the name of the security-camera device class — context disambiguates it
+from a room. Code identifiers are kept as-is; this table is only a reading aid.
+
+---
+
+## Key concepts & design decisions
+
+Each point notes **what**, **where in the code**, and **why**.
+
+**Object-oriented design**
+- *Abstraction & inheritance* — `Device` and `Senzor` are abstract bases with four concrete
+  subclasses each (`model/device`, `model/senzor`). A generic device/sensor cannot be
+  instantiated; each real type carries its own attributes.
+- *Polymorphism* — `DeviceRepository.mapRow()` reads the `type` discriminator column and
+  instantiates the correct subclass via a `switch` expression, so a single query over the
+  `devices` table rebuilds a heterogeneous list.
+- *Encapsulation* — fields are private/protected with accessors; `Room.getDevices()` /
+  `getSenzori()` return unmodifiable views to protect the internal collections.
+- *`Comparable`* — `Device implements Comparable<Device>`, ordering by power consumption
+  (tie-broken by id), used by `DeviceService.getDevicesSortedByConsum()`.
+
+**Generics**
+- `AbstractRepository<T>` (`repository/AbstractRepository.java`) implements `findById`
+  (returns `Optional<T>`), `findAll`, `deleteById` and `deleteAll` once for every entity.
+
+**Design patterns**
+- *Template Method* — `AbstractRepository<T>` defines the CRUD skeleton; subclasses supply
+  `getTableName()`, `mapRow()`, `save()` and `update()`.
+- *Repository* — one repository per aggregate isolates persistence from the services.
+- *Singleton* — `DatabaseConfig`, `AuditService`, every repository and `AppContext` use a
+  thread-safe `synchronized getInstance()`. Rationale: a single shared JDBC connection and a
+  single CSV writer avoid conflicting instances and interleaved writes. (Trade-off: this is
+  global state — see [Known limitations](#known-limitations--possible-improvements).)
+- *Service locator* — `AppContext` (JavaFX) holds the shared service instances and current
+  user/house; windows and tabs pull services from it. There is no dependency injection.
+
+**Persistence**
+- *JDBC without an ORM* — chosen deliberately to work directly with connections,
+  `PreparedStatement`s and `ResultSet`s rather than hiding them behind JPA/Hibernate.
+- *`PreparedStatement` everywhere* — parameters are bound separately from the SQL text,
+  preventing SQL injection.
+- *Single-Table Inheritance* — each hierarchy (`Device`, `Senzor`) maps to one table with a
+  `type` discriminator and nullable subtype columns. Trade-off: no joins to reconstruct an
+  object, at the cost of nullable columns that don't apply to every subtype.
+- *Referential integrity* — foreign keys with `ON DELETE CASCADE` (deleting a house removes
+  its rooms, devices, sensors and reports); device/sensor `room_id` uses `ON DELETE SET NULL`.
+
+**Collections**
+- `List<Room>` / `List<Device>` — insertion order is meaningful.
+- `Set<Senzor>` (`HashSet`) — a sensor can't appear twice in a room; order is irrelevant.
+- `TreeMap<Integer, RegulaAutomatizare>` (`AutomationService`) — keeps rules sorted by id so
+  `executeRules()` always evaluates them in a consistent order without an explicit sort.
+
+**Error handling**
+- An unchecked hierarchy: `AppException extends RuntimeException`, with `ValidationException`,
+  `DuplicateEntityException` and `NotFoundException`. Validation errors are internal
+  invariants, so callers aren't forced into `try/catch`; the UI still catches specific types
+  to show tailored messages.
+
+**Automation engine** (`AutomationService.executeRules()`)
+- Iterates active rules in id order. For each rule it evaluates **all** conditions (AND logic)
+  using the operators `>`, `<`, `>=`, `<=`, `==`; if all hold, it runs the rule's actions.
+- Supported actions: `turnOn`, `turnOff`, `setTemperature` (thermostats), `setLuminozitate`
+  (lights), `lock` / `unlock` (door locks). Commands are validated against the device type,
+  and executed changes are persisted to the database.
+
+**Audit trail** (`AuditService`)
+- Appends `action,timestamp` (ISO-8601) to `audit.csv` with `StandardOpenOption.APPEND`;
+  the file is created with a header on first use and never overwritten.
+
+**JavaFX GUI**
+- `Launcher` (a non-`Application` class) calls `Application.launch` to start the FX thread.
+  Navigation: `LoginWindow` → `RegisterWindow` (a `WINDOW_MODAL` dialog) → `MainWindow`.
+- `MainWindow` is a `BorderPane` with a 5-tab `TabPane` (Houses & Rooms, Devices, Sensors,
+  Automation, Energy); switching tabs calls `refresh()` on the activated tab.
+- Tables use `TableView` + `ObservableList` with JavaFX property cell-value factories.
+- The Devices tab filters in cascade (house → room → devices) and its add-dialog shows
+  type-specific fields depending on the selected device type.
+
+---
+
+## Database schema
+
+Defined in [`src/schema.sql`](src/schema.sql) — 9 tables. Run it once against an empty
+`smart_house_db` database (it is **not** created automatically at startup). Primary keys are
+plain `INT` values assigned by the application (`nextId()` = `MAX(id)+1`), not `AUTO_INCREMENT`.
+
+```mermaid
+erDiagram
+    users ||--o{ houses : owns
+    houses ||--o{ rooms : contains
+    rooms ||--o{ devices : "holds (SET NULL)"
+    rooms ||--o{ senzori : "holds (SET NULL)"
+    houses ||--o{ rapoarte_energie : reports
+    reguli_automatizare ||--o{ conditii : has
+    reguli_automatizare ||--o{ actiuni : has
+    senzori ||--o{ conditii : "tested by"
+    devices ||--o{ actiuni : "acted on by"
+
+    users {
+        int id PK
+        varchar nume
+        varchar email
+        varchar password
+    }
+    houses {
+        int id PK
+        varchar adresa
+        int owner_id FK
+    }
+    rooms {
+        int id PK
+        varchar nume
+        varchar type
+        int house_id FK
+    }
+    devices {
+        int id PK
+        varchar nume
+        boolean status
+        double putere_consumata
+        int room_id FK
+        varchar type
+    }
+    senzori {
+        int id PK
+        varchar nume
+        double valoare
+        int room_id FK
+        varchar type
+    }
+    rapoarte_energie {
+        int id PK
+        int house_id FK
+        double total_consum
+        timestamp generat
+    }
+    reguli_automatizare {
+        int id PK
+        varchar nume
+        boolean activ
+    }
+    conditii {
+        int id PK
+        int regula_id FK
+        int senzor_id FK
+        varchar operator
+        double valoare
+    }
+    actiuni {
+        int id PK
+        int regula_id FK
+        int device_id FK
+        varchar comanda
+        double valoare
+    }
+```
+
+---
+
+## Getting started
+
+### Prerequisites
+
+- JDK 17+
+- Maven 3.8+
+- MySQL 8 running locally
+
+### 1. Create the database and schema
+
+```sql
+CREATE DATABASE smart_house_db;
+```
+
+```bash
+mysql -u <user> -p smart_house_db < src/schema.sql
+```
+
+### 2. Configure credentials
+
+```bash
+cp src/db.properties.example src/db.properties
+```
+
+Edit `src/db.properties` with your MySQL URL, user and password. This file is git-ignored,
+so your credentials stay out of version control.
+
+### 3. Run the JavaFX GUI
+
+```bash
+mvn clean javafx:run
+```
+
+### 4. Run the console / demo (`Main`)
+
+```bash
+mvn exec:java
+```
+
+`Main` offers two modes: an **automated demo** (resets the database and runs a full scenario)
+and an **interactive menu** (loads existing data from the database). You can also run the
+`Main` class directly from an IDE.
+
+---
+
+## Project structure
 
 ```
 src/
-├── Main.java                               — punct de intrare (demo + mod interactiv)
-├── schema.sql                              — schema MySQL (9 tabele)
-├── db.properties                           — configurare conexiune MySQL
-├── config/
-│   └── DatabaseConfig.java                 — singleton conexiune JDBC
-├── audit/
-│   └── AuditService.java                   — singleton audit → audit.csv
-├── exception/
-│   ├── AppException.java                   — excepție de bază (RuntimeException)
-│   ├── ValidationException.java            — erori de validare date
-│   ├── DuplicateEntityException.java       — entitate duplicat (id existent)
-│   └── NotFoundException.java              — entitate negăsită
-├── model/
-│   ├── User.java
-│   ├── House.java                          — conține List<Room>
-│   ├── Room.java                           — conține List<Device> + Set<Senzor>
-│   ├── RaportEnergie.java
-│   ├── device/
-│   │   ├── Device.java                     — clasă abstractă, implements Comparable<Device>
-│   │   ├── Lumina.java                     — extends Device
-│   │   ├── Termostat.java                  — extends Device
-│   │   ├── Camera.java                     — extends Device
-│   │   └── DoorLock.java                   — extends Device
-│   ├── senzor/
-│   │   ├── Senzor.java                     — clasă abstractă
-│   │   ├── SenzorTemperatura.java          — extends Senzor
-│   │   ├── SenzorMiscare.java              — extends Senzor
-│   │   ├── SenzorFum.java                  — extends Senzor
-│   │   └── SenzorLumina.java              — extends Senzor
-│   └── automatizare/
-│       ├── RegulaAutomatizare.java
-│       ├── Conditie.java
-│       └── Actiune.java
-├── repository/
-│   ├── AbstractRepository.java             — clasă generică abstractă (CRUD comun)
-│   ├── UserRepository.java                 — singleton CRUD pentru users
-│   ├── HouseRepository.java                — singleton CRUD pentru houses
-│   ├── RoomRepository.java                 — singleton CRUD pentru rooms
-│   ├── DeviceRepository.java               — singleton CRUD pentru devices
-│   ├── SenzorRepository.java               — singleton CRUD pentru senzori
-│   ├── RegulaAutomatizareRepository.java   — singleton CRUD + conditii + actiuni
-│   └── RaportEnergieRepository.java        — singleton CRUD pentru rapoarte
-├── service/
-│   ├── HouseService.java
-│   ├── DeviceService.java
-│   ├── SenzorService.java
-│   ├── AutomationService.java
-│   └── EnergieService.java
+├── Main.java                  — console entry point: automated demo + interactive menu
+├── schema.sql                 — MySQL schema (9 tables); run manually once
+├── db.properties.example      — template for local DB credentials
+├── config/DatabaseConfig.java — singleton holding the shared JDBC connection
+├── audit/AuditService.java    — singleton append-only CSV audit log
+├── exception/                 — AppException (unchecked) + Validation/Duplicate/NotFound
+├── model/                     — 17 domain classes
+│   ├── device/                — Device (abstract) + Lumina, Termostat, Camera, DoorLock
+│   ├── senzor/                — Senzor (abstract) + 4 sensor subclasses
+│   └── automatizare/          — RegulaAutomatizare, Conditie, Actiune
+├── repository/                — AbstractRepository<T> + 7 concrete repositories
+├── service/                   — House/Device/Senzor/Automation/Energie/User services
 └── ui/
-    ├── ConsoleReader.java                  — utilitar citire date din terminal
-    ├── SmartHomeConsoleApp.java            — interfață interactivă cu meniuri
-    └── fx/
-        ├── Launcher.java                   — entry point JavaFX
-        ├── SmartHomeFxApp.java             — Application JavaFX
-        ├── LoginWindow.java                — ecran autentificare
-        ├── RegisterWindow.java             — ecran înregistrare
-        ├── MainWindow.java                 — fereastra principală cu tab-uri
-        ├── AppContext.java                 — context partajat între ferestre
-        ├── Dialogs.java                    — utilitare dialog
-        └── tabs/
-            ├── CasaTab.java
-            ├── DeviceTab.java
-            ├── SenzorTab.java
-            ├── AutomationTab.java
-            └── EnergieTab.java
+    ├── ConsoleReader.java     — terminal input helper
+    ├── SmartHomeConsoleApp.java — interactive console menus
+    └── fx/                    — JavaFX: Launcher, windows, AppContext, and 5 tabs
+docs/                          — design diagrams, course docs, screenshots
 ```
 
 ---
 
-## Schema bazei de date (MySQL)
+## Known limitations & possible improvements
 
-Fișierul `src/schema.sql` definește 9 tabele cu relații de tip foreign key și ON DELETE CASCADE:
+Honest notes on where the project would evolve next:
 
-```
-users ──< houses ──< rooms ──< devices
-                         └──< senzori
-                    └──< rapoarte_energie
-reguli_automatizare ──< conditii (→ senzori)
-                    └──< actiuni  (→ devices)
-```
-
-**Strategia de moștenire:** Single-Table Inheritance cu coloana discriminatorie `type` pentru ierarhiile `Device` (LUMINA / TERMOSTAT / CAMERA / DOORLOCK) și `Senzor` (TEMPERATURA / LUMINA / MISCARE / FUM).
-
----
-
-## Diagrame
-
-### Diagrama de clase
-Prezintă toate entitățile sistemului, atributele fiecărei clase, relațiile de moștenire și asocierile dintre obiecte.
-
-![Diagrama de clase](docs/diagrama_clase.png)
-
-### Logica aplicației
-Ilustrează relațiile dintre entități: un User deține mai multe House-uri, o House conține Room-uri, iar fiecare Room poate avea Device-uri și Senzori. Regulile de automatizare leagă Condiții (bazate pe Senzori) de Acțiuni (bazate pe Device-uri).
-
-![Logica aplicației](docs/logica_clase.png)
-
-### Operații sistem (Service Layer)
-Prezintă cele 5 servicii ale aplicației și metodele expuse de fiecare.
-
-![Operații sistem](docs/operatii_sistem.png)
+- **No connection pool** — a single JDBC `Connection` is shared application-wide; a pool
+  (e.g. HikariCP) would be the production approach.
+- **Global state** — singletons and the `AppContext` service locator stand in for dependency
+  injection, which limits unit-test isolation.
+- **No automated tests** — a JUnit 5 suite (with Testcontainers for MySQL) is the natural
+  next step.
+- **Plaintext passwords** — user passwords are stored and compared as plain text; they should
+  be hashed (BCrypt/Argon2).
+- **Database access on the JavaFX thread** — login and data loading run on the FX Application
+  Thread; long queries should move to a JavaFX `Task`/`Service` to keep the UI responsive.
+- **Application-assigned IDs** — ids come from `MAX(id)+1` rather than `AUTO_INCREMENT`, which
+  is race-prone under concurrency.
+- **Non-standard Maven layout** — sources live in `src/` instead of `src/main/java`.
+- **Mixed-language identifiers** — the code mixes Romanian and English names (see the
+  [glossary](#domain-model)).
 
 ---
 
-## Cerințe tehnice acoperite
+## Context
 
-### Etapa I
+Built for the **Advanced Object-Oriented Programming (Java)** course, Faculty of Mathematics
+and Computer Science, University of Bucharest. The project migrated its persistence layer from
+PostgreSQL to MySQL during development.
 
-| Cerință | Implementare | Locație în cod |
-|---|---|---|
-| Minim 8 tipuri de obiecte | 17 clase model | `src/model/` |
-| Minim 10 acțiuni/interogări | 25 operații în 5 servicii | `src/service/` |
-| Clase cu atribute private/protected + metode de acces | Toate clasele folosesc encapsulare | `User.java`, `Device.java`, `Senzor.java` |
-| Minim 2 colecții diferite | List, Set, TreeMap | `List<Room>` în House, `Set<Senzor>` în Room, `TreeMap` în AutomationService |
-| Minim 1 colecție sortată | TreeMap + Collections.sort cu Comparable | `TreeMap` în AutomationService; `DeviceService.getDevicesSortedByConsum()` |
-| Moștenire | 3 ierarhii | Device → 4 subclase; Senzor → 4 subclase; AppException → 3 subclase |
-| Clase serviciu | 5 servicii | HouseService, DeviceService, SenzorService, AutomationService, EnergieService |
-| Clasă Main | Demo automat + mod interactiv | `Main.java` |
-
-### Etapa II
-
-| Cerință | Implementare | Locație în cod |
-|---|---|---|
-| Persistență cu bază de date relațională + JDBC | MySQL + JDBC pur (fără ORM) | `src/config/DatabaseConfig.java`, `src/schema.sql` |
-| Servicii singleton generice pentru CRUD | `AbstractRepository<T>` — clasă generică abstractă cu `findById`, `findAll`, `deleteById`, `deleteAll`, `save`, `update` | `src/repository/AbstractRepository.java` |
-| CRUD pentru cel puțin 4 clase | CRUD complet pentru 7 entități: User, House, Room, Device, Senzor, RegulaAutomatizare (+ Conditie/Actiune), RaportEnergie | `src/repository/` |
-| Serviciu de audit CSV | `AuditService` singleton, scrie `nume_actiune,timestamp` la fiecare operație | `src/audit/AuditService.java` → `audit.csv` |
+- Original course requirements (Romanian): [docs/course-requirements-ro.md](docs/course-requirements-ro.md)
+- Oral presentation guide (Romanian): [docs/presentation-guide-ro.md](docs/presentation-guide-ro.md)
 
 ---
 
-## Moduri de rulare
+## Author
 
-### 1. Demo automat (opțiunea 1)
-Resetează baza de date, recreează toate datele de la zero: casă cu 4 camere, dispozitive, senzori, reguli de automatizare, raport de energie. Toate operațiile sunt logate în `audit.csv`.
-
-### 2. Mod interactiv consolă (opțiunea 2)
-Încarcă datele existente din DB și oferă un meniu interactiv pentru toate operațiile.
-
-### 3. Interfață grafică JavaFX
-Ecran de login/register cu autentificare prin MySQL, urmat de o fereastră principală cu tab-uri pentru Case, Dispozitive, Senzori, Automatizări și Energie.
-
----
-
-## Etape dezvoltare
-
-- [x] **Etapa I** — Definirea sistemului și implementarea in-memory
-- [x] **Etapa II** — Persistență MySQL + JDBC + serviciu de audit CSV + interfață JavaFX
-
----
-
-## Cum a fost implementată extinderea cu baza de date
-
-### Conexiunea JDBC — `DatabaseConfig` (Singleton)
-
-Conexiunea la MySQL este gestionată printr-un Singleton în `src/config/DatabaseConfig.java`. La prima utilizare, citește credențialele din fișierul `src/db.properties` (url, user, password), înregistrează driverul MySQL (`com.mysql.cj.jdbc.Driver`) și deschide o conexiune JDBC care rămâne activă pe toată durata aplicației. Metoda `getConnection()` verifică dacă conexiunea e încă deschisă și o recreează dacă a fost închisă.
-
-```
-db.url=jdbc:mysql://localhost:3306/smart_house_db
-db.user=root
-db.password=...
-```
-
-### Schema bazei de date — `schema.sql`
-
-Sunt definite **9 tabele** cu relații de tip foreign key și `ON DELETE CASCADE`:
-
-```
-users ──< houses ──< rooms ──< devices
-                         └──< senzori
-                    └──< rapoarte_energie
-reguli_automatizare ──< conditii (→ senzori)
-                    └──< actiuni  (→ devices)
-```
-
-**Strategia Single-Table Inheritance:** Ierarhiile de clase (`Device`, `Senzor`) sunt stocate fiecare într-un singur tabel, cu o coloană `type` care indică subtipul real (ex: `LUMINA`, `TERMOSTAT`, `CAMERA`, `DOORLOCK`). Coloanele specifice subtipurilor sunt nullable. La citire din baza de date, metoda `mapRow()` citește `type` și instanțiază subclasa corectă prin `switch`.
-
-### Repository-uri generice — `AbstractRepository<T>`
-
-Clasa abstractă generică `AbstractRepository<T>` din `src/repository/AbstractRepository.java` conține o singură dată implementările pentru:
-- `findById(int id)` — `SELECT * FROM <tabel> WHERE id = ?`
-- `findAll()` — `SELECT * FROM <tabel>`
-- `deleteById(int id)` — `DELETE FROM <tabel> WHERE id = ?`
-- `deleteAll()` — `DELETE FROM <tabel>`
-
-Subclasele trebuie să implementeze doar:
-- `getTableName()` → numele tabelului (ex: `"houses"`)
-- `mapRow(ResultSet rs)` → construiește obiectul din linia curentă din ResultSet
-- `save(T entity)` → `INSERT` cu parametrii specifici entității
-- `update(T entity)` → `UPDATE` cu parametrii specifici
-
-**Fiecare repository este și Singleton** cu `getInstance()` synchronized, astfel că există o singură instanță care accesează conexiunea din `DatabaseConfig`.
-
-Toate query-urile folosesc `PreparedStatement` (nu `Statement`) pentru a preveni SQL injection — parametrii sunt trimiși separat de interogare.
-
-### CRUD pentru 7 entități
-
-| Repository | Tabel | Metode speciale |
-|---|---|---|
-| `UserRepository` | users | `findByEmail(email)`, `nextId()` |
-| `HouseRepository` | houses | `findByOwnerId(ownerId)` |
-| `RoomRepository` | rooms | `saveForHouse(room, houseId)`, `findByHouseId(houseId)` |
-| `DeviceRepository` | devices | `saveForRoom(device, roomId)`, `findByRoomId(roomId)`, `updateRoom(deviceId, roomId)`, `nextId()` |
-| `SenzorRepository` | senzori | `saveForRoom(senzor, roomId)`, `findByRoomId(roomId)` |
-| `RegulaAutomatizareRepository` | reguli + conditii + actiuni | `saveConditie`, `saveActiune`, `findConditiiByRegulaId`, `findActiuniByRegulaId` |
-| `RaportEnergieRepository` | rapoarte_energie | — |
-
-### Serviciul de audit CSV — `AuditService`
-
-`AuditService` este un Singleton care scrie în `audit.csv` câte o linie la fiecare operație care modifică starea:
-```
-nume_actiune,timestamp
-createHouse,2025-06-09T14:23:01.452
-addDevice,2025-06-09T14:23:01.502
-turnOnDevice,2025-06-09T14:23:01.510
-```
-Fișierul este deschis cu `StandardOpenOption.APPEND`, deci nu se suprascrie niciodată. Dacă nu există, este creat automat cu header la prima scriere.
-
----
-
-## Cum a fost implementată interfața grafică JavaFX
-
-### Structura lansării — `Launcher` și `SmartHomeFxApp`
-
-JavaFX nu poate fi pornit direct din `main()` fără un workaround, de aceea există clasa `Launcher` (fără a extinde `Application`) care apelează `Application.launch(SmartHomeFxApp.class)`. `SmartHomeFxApp` extinde `Application` și în `start(Stage)` afișează prima fereastră — `LoginWindow`.
-
-### Fluxul de navigare între ferestre
-
-```
-Launcher.main()
-    └── SmartHomeFxApp.start(Stage)
-            └── LoginWindow.show()        ← utilizatorul introduce email + parolă
-                    ├── RegisterWindow    ← fereastră modală pentru cont nou
-                    └── MainWindow.show() ← după autentificare reușită
-```
-
-**LoginWindow** (`src/ui/fx/LoginWindow.java`):
-- Construiește un formular cu `VBox`: câmpuri `TextField` pentru email și `PasswordField` pentru parolă, un `Button` de login și un `Hyperlink` spre înregistrare.
-- Stilizare inline cu gradient albastru (`-fx-background-color: linear-gradient(...)`).
-- La click pe Login: validează câmpurile, apelează `UserRepository.findByEmail(email)`, compară parola, și dacă totul e OK → setează userul în `AppContext` și afișează `MainWindow`.
-
-**RegisterWindow** (`src/ui/fx/RegisterWindow.java`):
-- Se deschide ca fereastră modală (`Modality.WINDOW_MODAL`) peste Login.
-- Validează: câmpuri completate, parolă minim 6 caractere, parolele coincid, email-ul nu e deja înregistrat.
-- La succes: apelează `userRepository.save(user)` și pre-completează câmpul email din LoginWindow.
-
-### `AppContext` — contextul partajat
-
-`AppContext` este un Singleton care ține starea globală a aplicației JavaFX:
-- instanțele celor 5 servicii (`HouseService`, `DeviceService`, `SenzorService`, `AutomationService`, `EnergieService`)
-- userul curent autentificat (`currentUser`)
-- casa curent selectată (`currentHouse`)
-
-Toate tab-urile și ferestrele accesează serviciile prin `AppContext.getInstance()` — nu există injecție de dependențe, contextul joacă rol de registru global.
-
-### `MainWindow` — fereastra principală cu tab-uri
-
-După autentificare, `MainWindow` apelează `loadDataForCurrentUser()` care încarcă datele din DB în memorie prin metodele `loadFromDatabase()` ale fiecărui serviciu (în ordinea corectă: case → camere → device-uri și senzori → reguli). Structura vizuală este un `BorderPane`:
-- **Top**: un header albastru cu numele aplicației, salutare cu userul logat și buton de Logout.
-- **Center**: un `TabPane` cu 5 tab-uri cu închidere dezactivată.
-
-La schimbarea tab-ului activ, se apelează automat `refresh()` pe tab-ul respectiv pentru a sincroniza datele afișate.
-
-### Tab-urile — structura comună
-
-Fiecare tab urmează același pattern:
-1. Are o clasă proprie în `src/ui/fx/tabs/` cu metoda `getView()` care returnează un `VBox`.
-2. Conține `ComboBox`-uri pentru selecție (casă, cameră) și un `TableView` cu `ObservableList` pentru afișarea datelor.
-3. `TableColumn`-urile folosesc `CellValueFactory` cu proprietăți JavaFX (`SimpleStringProperty`, `SimpleIntegerProperty`, `SimpleBooleanProperty`, `SimpleDoubleProperty`) pentru binding.
-4. Butoanele (Adaugă, Șterge, Toggle, Mută) deschid `Dialog`-uri cu `GridPane` pentru introducerea datelor noi.
-
-**Tab Device-uri** (`DeviceTab`):
-- Filtrare în cascadă: selectezi Casa → se populează ComboBox-ul de Camere → se populează tabelul cu device-urile din acea cameră.
-- Checkbox „Sortează după consum" comută între lista normală și `deviceService.getDevicesSortedByConsum(room)`.
-- Dialogul de adăugare are câmpuri dinamice: tipul selectat din ComboBox schimbă label-urile și valorile implicite pentru câmpurile specifice (ex: pentru `Lumina` apare „Luminozitate" și „Culoare", pentru `Termostat` apare „Temp curentă" și „Temp țintă").
-
-**Tab Senzori** (`SenzorTab`): același pattern cu ComboBox casă/cameră, tabel de senzori și butoane pentru adăugare, ștergere și simulare valoare (generează o valoare aleatoare în intervalul specificat).
-
-**Tab Automatizări** (`AutomationTab`): listează regulile, permite adăugarea de condiții și acțiuni la o regulă selectată, activare/dezactivare și execuție manuală a tuturor regulilor.
-
-**Tab Energie** (`EnergieTab`): afișează consumul calculat pentru casa selectată și listează rapoartele generate anterior.
-
----
-
-## Etape dezvoltare
-
-- [x] **Etapa I** — Definirea sistemului și implementarea in-memory
-- [x] **Etapa II** — Persistență MySQL + JDBC + serviciu de audit CSV + interfață JavaFX
-
----
-
-## Tehnologii
-
-- **Java 17**
-- **MySQL 8** + **JDBC** (mysql-connector-j 8.4.0)
-- **JavaFX 21.0.4** — interfață grafică
-- **Maven** — build & dependency management
+- **[Name]**
+- [LinkedIn]
+- [email]

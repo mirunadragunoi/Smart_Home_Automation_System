@@ -62,6 +62,16 @@
                     <mainClass>ui.fx.Launcher</mainClass>
                 </configuration>
             </plugin>
+
+            <!-- Runs the console/demo entry point: mvn exec:java -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>Main</mainClass>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

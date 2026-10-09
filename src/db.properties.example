@@ -1,0 +1,5 @@
+# Copy this file to db.properties and fill in your own MySQL credentials.
+# db.properties is git-ignored so your real password never lands in the repo.
+db.url=jdbc:mysql://localhost:3306/smart_house_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+db.user=your_user
+db.password=your_password
