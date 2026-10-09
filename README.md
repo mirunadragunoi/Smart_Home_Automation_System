@@ -385,11 +385,3 @@ PostgreSQL to MySQL during development.
 
 - Original course requirements (Romanian): [docs/course-requirements-ro.md](docs/course-requirements-ro.md)
 - Oral presentation guide (Romanian): [docs/presentation-guide-ro.md](docs/presentation-guide-ro.md)
-
----
-
-## Author
-
-- **[Name]**
-- [LinkedIn]
-- [email]
